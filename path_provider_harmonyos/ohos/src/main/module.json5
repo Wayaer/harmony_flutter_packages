@@ -1,0 +1,11 @@
+{
+  "module": {
+    "name": "path_provider_harmonyos",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet",
+      "2in1"
+    ]
+  }
+}
