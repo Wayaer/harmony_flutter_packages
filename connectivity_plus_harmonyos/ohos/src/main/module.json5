@@ -1,0 +1,22 @@
+{
+  "module": {
+    "name": "connectivity_plus_harmonyos",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet",
+      "2in1"
+    ],
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.INTERNET"
+      },
+      {
+        "name": "ohos.permission.GET_NETWORK_INFO",
+        "usedScene": {
+          "when": "inuse"
+        }
+      }
+    ]
+  }
+}
