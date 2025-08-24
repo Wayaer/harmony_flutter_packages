@@ -1,0 +1,11 @@
+{
+  "module": {
+    "name": "url_launcher_harmonyos",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet",
+      "2in1"
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+name: url_launcher_harmonyos_example
+description: "Demonstrates how to use the url_launcher_harmonyos plugin."
+publish_to: 'none'
+
+environment:
+  sdk: ^3.6.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  url_launcher: ^6.3.2
+  url_launcher_harmonyos:
+    path: ../
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
