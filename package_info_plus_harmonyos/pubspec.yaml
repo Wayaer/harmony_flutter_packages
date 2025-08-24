@@ -1,0 +1,23 @@
+name: package_info_plus_harmonyos
+description: "HarmonyOS implementation of the package_info_plus plugin."
+version: 0.0.1
+repository: https://github.com/Wayaer/harmony_flutter_packages/tree/main/package_info_plus_harmonyos
+
+environment:
+  sdk: '>=3.6.2 <4.0.0'
+  flutter: '>=3.27.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  package_info_plus_platform_interface: ^3.1.0
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  plugin:
+    implements: package_info_plus
+    platforms:
+      ohos:
+        pluginClass: PackageInfoPlusPlugin
