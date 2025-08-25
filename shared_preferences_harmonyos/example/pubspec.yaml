@@ -1,0 +1,19 @@
+name: shared_preferences_harmonyos_example
+description: "Demonstrates how to use the shared_preferences_harmonyos plugin."
+publish_to: 'none'
+
+environment:
+  sdk: ^3.6.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  shared_preferences: ^2.5.3
+  shared_preferences_harmonyos:
+    path: ../
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
