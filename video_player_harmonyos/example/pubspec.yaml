@@ -1,0 +1,23 @@
+name: video_player_harmonyos_example
+description: "Demonstrates how to use the video_player_harmonyos plugin."
+publish_to: 'none'
+
+environment:
+  sdk: ^3.6.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  path_provider: ^2.1.5
+  path_provider_harmonyos: ^0.0.1
+  video_player: ^2.10.0
+  video_player_harmonyos:
+    path: ../
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
