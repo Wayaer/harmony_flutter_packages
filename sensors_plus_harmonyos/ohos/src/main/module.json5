@@ -1,0 +1,16 @@
+{
+  "module": {
+    "name": "sensors_plus_harmonyos",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet",
+      "2in1"
+    ],
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.ACCELEROMETER"
+      }
+    ]
+  }
+}
