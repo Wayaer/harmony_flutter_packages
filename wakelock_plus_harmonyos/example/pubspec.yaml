@@ -1,0 +1,19 @@
+name: wakelock_plus_harmonyos_example
+description: "Demonstrates how to use the wakelock_plus_harmonyos plugin."
+publish_to: 'none'
+
+environment:
+  sdk: ^3.6.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  wakelock_plus: ^1.3.2
+  wakelock_plus_harmonyos:
+    path: ../
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
