@@ -1,0 +1,23 @@
+name: share_plus_harmonyos
+description: "HarmonyOS implementation of the share_plus plugin."
+version: 0.0.1
+repository: https://github.com/Wayaer/harmony_flutter_packages/tree/main/share_plus_harmonyos
+
+environment:
+  sdk: '>=3.6.2 <4.0.0'
+  flutter: '>=3.27.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  share_plus_platform_interface: ^6.1.0
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  plugin:
+    implements: share_plus
+    platforms:
+      ohos:
+        pluginClass: SharePlusPlugin
