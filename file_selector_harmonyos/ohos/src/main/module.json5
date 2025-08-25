@@ -1,0 +1,11 @@
+{
+  "module": {
+    "name": "file_selector_harmonyos",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet",
+      "2in1"
+    ]
+  }
+}

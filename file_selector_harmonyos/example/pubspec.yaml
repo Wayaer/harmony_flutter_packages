@@ -1,0 +1,21 @@
+name: file_selector_harmonyos_example
+description: "Demonstrates how to use the file_selector_harmonyos plugin."
+publish_to: 'none'
+
+environment:
+  sdk: ^3.6.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_driver:
+    sdk: flutter
+  file_selector: ^1.0.3
+  file_selector_harmonyos:
+    path: ../
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
