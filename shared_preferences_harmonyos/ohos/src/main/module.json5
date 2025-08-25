@@ -1,0 +1,11 @@
+{
+  "module": {
+    "name": "shared_preferences_harmonyos",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet",
+      "2in1"
+    ]
+  }
+}

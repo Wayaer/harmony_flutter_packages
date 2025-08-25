@@ -1,0 +1,24 @@
+name: shared_preferences_harmonyos
+description: "HarmonyOS implementation of the shared_preferences plugin."
+version: 0.0.1
+repository: https://github.com/Wayaer/harmony_flutter_packages/tree/main/shared_preferences_harmonyos
+
+environment:
+  sdk: '>=3.6.2 <4.0.0'
+  flutter: '>=3.27.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  shared_preferences_platform_interface: ^2.1.0
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  plugin:
+    implements: shared_preferences
+    platforms:
+      ohos:
+        pluginClass: SharedPreferencesPlugin
+        dartPluginClass: SharedPreferencesHarmonyOS
