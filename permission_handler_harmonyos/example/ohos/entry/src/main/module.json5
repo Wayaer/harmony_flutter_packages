@@ -1,0 +1,198 @@
+
+{
+  "module": {
+    "name": "entry",
+    "type": "entry",
+    "description": "$string:module_desc",
+    "mainElement": "EntryAbility",
+    "deviceTypes": [
+      "phone"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages",
+    "abilities": [
+      {
+        "name": "EntryAbility",
+        "srcEntry": "./ets/entryability/EntryAbility.ets",
+        "description": "$string:EntryAbility_desc",
+        "icon": "$media:icon",
+        "label": "$string:EntryAbility_label",
+        "startWindowIcon": "$media:icon",
+        "startWindowBackground": "$color:start_window_background",
+        "exported": true,
+        "skills": [
+          {
+            "entities": [
+              "entity.system.home"
+            ],
+            "actions": [
+              "action.system.home"
+            ]
+          }
+        ]
+      }
+    ],
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.DISCOVER_BLUETOOTH",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason": "$string:module_desc"
+      },
+      {
+        "name": "ohos.permission.USE_BLUETOOTH",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason": "$string:module_desc"
+      },
+      {
+        "name": "ohos.permission.ACTIVITY_MOTION",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason": "$string:module_desc"
+      },
+      {
+        "name": "ohos.permission.LOCATION",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason": "$string:module_desc"
+      },
+      {
+        "name": "ohos.permission.CAMERA",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason": "$string:module_desc"
+      },
+      {
+        "name": "ohos.permission.APPROXIMATELY_LOCATION",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason": "$string:module_desc"
+      },
+      {
+        "name": "ohos.permission.LOCATION_IN_BACKGROUND",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason": "$string:module_desc"
+      },
+      {
+        "name": "ohos.permission.READ_CALENDAR",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason": "$string:module_desc"
+      },
+      {
+        "name": "ohos.permission.WRITE_CALENDAR",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason": "$string:module_desc"
+      },
+      {
+        "name": "ohos.permission.READ_CONTACTS",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason": "$string:module_desc"
+      },
+      {
+        "name": "ohos.permission.WRITE_CONTACTS",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason": "$string:module_desc"
+      },
+      {
+        "name": "ohos.permission.ACCESS_BLUETOOTH",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason": "$string:module_desc"
+      },
+      {
+        "name": "ohos.permission.MEDIA_LOCATION",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason": "$string:module_desc"
+      },
+      {
+        "name": "ohos.permission.MICROPHONE",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason": "$string:module_desc"
+      },
+      {
+        "name": "ohos.permission.ACCESS_NOTIFICATION_POLICY",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason": "$string:module_desc"
+      },
+      {
+        "name": "ohos.permission.READ_MEDIA",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason": "$string:module_desc"
+      },]
+  }
+}
