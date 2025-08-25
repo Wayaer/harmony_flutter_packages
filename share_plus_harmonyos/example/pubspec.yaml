@@ -1,0 +1,25 @@
+name: share_plus_harmonyos_example
+description: "Demonstrates how to use the share_plus_harmonyos plugin."
+publish_to: 'none'
+
+environment:
+  sdk: ^3.6.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  share_plus: ^11.1.0
+  share_plus_harmonyos:
+    path: ../
+  file_selector: ^1.0.3
+  file_selector_harmonyos: ^0.0.1
+  path_provider: ^2.1.5
+  path_provider_harmonyos: ^0.0.1
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
