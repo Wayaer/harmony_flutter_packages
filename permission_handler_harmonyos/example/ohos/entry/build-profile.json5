@@ -1,0 +1,18 @@
+
+{
+  "apiType": 'stageMode',
+  "buildOption": {
+    "napiLibFilterOption": {
+      "enableOverride": true
+    }
+  },
+  "targets": [
+    {
+      "name": "default",
+      "runtimeOS": "HarmonyOS"
+    },
+    {
+      "name": "ohosTest",
+    }
+  ]
+}

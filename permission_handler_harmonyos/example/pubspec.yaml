@@ -1,0 +1,21 @@
+name: permission_handler_harmonyos_example
+description: "Demonstrates how to use the permission_handler_harmonyos plugin."
+publish_to: 'none'
+
+environment:
+  sdk: ^3.6.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  baseflow_plugin_template: ^2.1.2
+  permission_handler_platform_interface: ^4.2.0
+  permission_handler: ^12.0.1
+  permission_handler_harmonyos:
+    path: ../
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
