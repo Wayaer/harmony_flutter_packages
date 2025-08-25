@@ -1,0 +1,10 @@
+{
+  "module": {
+    "name": "video_player_harmonyos",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet"
+    ]
+  }
+}
