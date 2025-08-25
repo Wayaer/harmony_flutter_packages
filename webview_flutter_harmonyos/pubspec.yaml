@@ -1,0 +1,24 @@
+name: webview_flutter_harmonyos
+description: "HarmonyOS implementation of the webview_flutter plugin."
+version: 0.0.1
+repository: https://github.com/Wayaer/harmony_flutter_packages/tree/main/webview_flutter_harmonyos
+
+environment:
+  sdk: '>=3.6.2 <4.0.0'
+  flutter: '>=3.27.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  webview_flutter_platform_interface: ^2.14.0
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  plugin:
+    implements: webview_flutter
+    platforms:
+      ohos:
+        pluginClass: WebViewFlutterPlugin
+        dartPluginClass: OhosWebViewPlatform
