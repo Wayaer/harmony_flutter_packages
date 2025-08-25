@@ -1,0 +1,11 @@
+{
+  "module": {
+    "name": "webview_flutter_harmonyos",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet",
+      "2in1"
+    ]
+  }
+}

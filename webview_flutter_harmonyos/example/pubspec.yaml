@@ -1,0 +1,26 @@
+name: webview_flutter_harmonyos_example
+description: "Demonstrates how to use the webview_flutter_harmonyos plugin."
+publish_to: 'none'
+
+environment:
+  sdk: ^3.6.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  webview_flutter: ^4.13.0
+  webview_flutter_harmonyos:
+    path: ../
+  path_provider: ^2.1.5
+  path_provider_harmonyos: ^0.0.1
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/sample_audio.ogg
+    - assets/sample_video.mp4
+    - assets/www/index.html
+    - assets/www/styles/style.css
