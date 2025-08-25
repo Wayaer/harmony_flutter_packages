@@ -1,0 +1,11 @@
+{
+  "module": {
+    "name": "permission_handler_harmonyos",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet",
+      "2in1"
+    ]
+  }
+}
