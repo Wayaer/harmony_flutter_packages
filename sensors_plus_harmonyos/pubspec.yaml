@@ -1,0 +1,23 @@
+name: sensors_plus_harmonyos
+description: "HarmonyOS implementation of the sensors_plus plugin."
+version: 0.0.1
+repository: https://github.com/Wayaer/harmony_flutter_packages/tree/main/sensors_plus_harmonyos
+
+environment:
+  sdk: '>=3.6.2 <4.0.0'
+  flutter: '>=3.27.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sensors_plus_platform_interface: ^2.0.1
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  plugin:
+    implements: sensors_plus
+    platforms:
+      ohos:
+        pluginClass: SensorsPlusPlugin
