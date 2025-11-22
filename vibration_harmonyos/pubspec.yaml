@@ -1,0 +1,25 @@
+name: vibration_harmonyos
+description: "HarmonyOS implementation of the vibration plugin."
+version: 0.0.1
+repository: https://github.com/Wayaer/harmony_flutter_packages/tree/main/vibration_harmonyos
+
+environment:
+  sdk: '>=3.6.2 <4.0.0'
+  flutter: '>=3.27.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  device_info_plus_harmonyos: ^0.0.5
+  vibration_platform_interface: ^0.1.1
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  plugin:
+    implements: vibration
+    platforms:
+      ohos:
+        pluginClass: VibrationPlugin
+        dartPluginClass: VibrationHarmonyOS

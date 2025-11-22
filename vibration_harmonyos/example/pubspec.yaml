@@ -1,0 +1,21 @@
+name: vibration_example
+description: Demonstrates how to use the vibration_ohos plugin.
+publish_to: 'none'
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  vibration: ^3.1.4
+  vibration_harmonyos:
+    path: ../
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/haptic_file.json

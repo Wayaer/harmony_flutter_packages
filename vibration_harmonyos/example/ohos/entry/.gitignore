@@ -1,0 +1,9 @@
+/node_modules
+/oh_modules
+/.preview
+/build
+/.cxx
+/.test
+GeneratedPluginRegistrant.ets
+/main/ets/plugins/GeneratedPluginRegistrant.ets
+/main/resources/rawfile
