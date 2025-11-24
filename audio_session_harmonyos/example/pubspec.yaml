@@ -1,0 +1,18 @@
+name: audio_session_harmonyos_example
+description: "Demonstrates how to use the audio_session_harmonyos plugin."
+publish_to: 'none'
+
+environment:
+  sdk: ^3.6.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  audio_session_harmonyos:
+    path: ../
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

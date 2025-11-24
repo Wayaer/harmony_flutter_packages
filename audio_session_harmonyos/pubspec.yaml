@@ -1,0 +1,23 @@
+name: audio_session_harmonyos
+description: "HarmonyOS implementation of the audio_session plugin."
+version: 0.0.1
+repository: https://github.com/Wayaer/harmony_flutter_packages/tree/main/audio_session_harmonyos
+
+environment:
+  sdk: '>=3.6.2 <4.0.0'
+  flutter: '>=3.27.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  audio_session: ^0.2.2
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  plugin:
+    implements: audio_session
+    platforms:
+      ohos:
+        pluginClass: AudioSessionPlugin
