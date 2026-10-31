@@ -1,3 +1,3 @@
-import SharedPreferencesPlugin from './src/main/ets/SharedPreferencesPlugin.ets'
+import SharedPreferencesPlugin from './src/main/ets/plugin/SharedPreferencesPlugin.ets'
 
 export default SharedPreferencesPlugin

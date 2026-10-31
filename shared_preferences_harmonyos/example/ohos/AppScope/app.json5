@@ -1,6 +1,6 @@
 {
   "app": {
-    "bundleName": "com.shared.preferences.harmonyos.example",
+    "bundleName": "shared.preferences.example",
     "vendor": "example",
     "versionCode": 1000000,
     "versionName": "1.0.0",

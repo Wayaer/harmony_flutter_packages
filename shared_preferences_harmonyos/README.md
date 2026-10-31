@@ -1,42 +1,67 @@
-<p align="center">
-  <h1 align="center"> <code>shared_preferences_harmonyos</code> </h1>
-</p>
+# shared_preferences_harmonyos
 
-## 1. 安装与使用
+`shared_preferences` 的鸿蒙（OpenHarmony / HarmonyOS）平台实现，兼容 Flutter 插件 `shared_preferences 2.5.6`。
 
-### 1.1 安装方式
-
-进入到工程目录并在 pubspec.yaml 中添加以下依赖：
-
-<!-- tabs:start -->
-
-#### pubspec.yaml
+## 安装与使用
 
 ```yaml
-...
-
 dependencies:
-  shared_preferences: ^2.5.3
-  shared_preferences_harmonyos: ^0.0.1
-...
+  shared_preferences: ^2.5.6
+  shared_preferences_harmonyos: ^2.5.6
 ```
-
-执行命令
 
 ```bash
 flutter pub get
 ```
 
-<!-- tabs:end -->
+插件通过 `dartPluginClass` 自动注册，业务代码直接使用 `shared_preferences` 的 API 即可。
 
-### 1.2 使用案例
+同步 API：
 
-使用案例详见 [shared_preferences_harmonyos](./example)
+```dart
+import 'package:shared_preferences/shared_preferences.dart';
 
-## 2. 约束与限制
+final SharedPreferences prefs = await SharedPreferences.getInstance();
+await prefs.setString('key', 'value');
+final String? value = prefs.getString('key');
+```
 
-### 2.1 兼容性
+异步 API：
 
-在以下版本中已测试通过
+```dart
+import 'package:shared_preferences/shared_preferences.dart';
 
-1. Flutter: 3.27.4-dev; SDK: 5.0.0(12); IDE: DevEco Studio: 5.0.13.200; ROM: 5.1.0.120 SP3;
+final SharedPreferencesAsync prefs = SharedPreferencesAsync();
+await prefs.setString('key', 'value');
+final String? value = await prefs.getString('key');
+```
+
+异步 API 的鸿蒙后端选项：
+
+```dart
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_harmonyos/shared_preferences_harmonyos.dart';
+
+// options 需要在构造 SharedPreferencesAsync 时传入。
+// 默认使用 DataStore：
+const options = SharedPreferencesAsyncOhosOptions();
+// 或使用传统 SharedPreferences 后端：
+// const options = SharedPreferencesAsyncOhosOptions(
+//   backend: SharedPreferencesOhosBackendLibrary.SharedPreferences,
+// );
+
+final SharedPreferencesAsync prefs = SharedPreferencesAsync(options: options);
+await prefs.setString('key', 'value');
+```
+
+## 鸿蒙平台限制
+
+- 同步 API 与异步 API 使用不同的存储后端，请勿混用同一份数据。
+- 大数据量的 `getAll` 单次跨线程传递可能较慢，建议通过 allowList 控制读取范围。
+- `clear()` 默认只清理 `flutter.` 前缀的数据；异步 API 的清理范围由后端决定。
+
+## 兼容版本
+
+- 对应上游 Flutter 插件版本：`shared_preferences 2.5.6`
+- 平台接口依赖：`shared_preferences_platform_interface: ^2.4.0`
+- 运行环境要求：Flutter `>=3.41.0`、Dart `>=3.11.0`
