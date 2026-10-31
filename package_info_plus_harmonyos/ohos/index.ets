@@ -1,3 +1,3 @@
-import PackageInfoPlusPlugin from './src/main/ets/PackageInfoPlusPlugin';
+import { PackageInfoPlusPlugin } from './src/main/ets/plugin/PackageInfoPlusPlugin';
 
 export default PackageInfoPlusPlugin;

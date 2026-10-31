@@ -1,42 +1,32 @@
-<p align="center">
-  <h1 align="center"> <code>package_info_plus_harmonyos</code> </h1>
-</p>
+# package_info_plus_harmonyos
 
-## 1. 安装与使用
+`package_info_plus` 的鸿蒙（OpenHarmony / HarmonyOS）平台实现，兼容 Flutter 插件 `package_info_plus 10.2.2`。
 
-### 1.1 安装方式
-
-进入到工程目录并在 pubspec.yaml 中添加以下依赖：
-
-<!-- tabs:start -->
-
-#### pubspec.yaml
+## 安装与使用
 
 ```yaml
-...
-
 dependencies:
-  package_info_plus: ^8.3.1
-  package_info_plus_harmonyos: ^0.0.1
-...
+  package_info_plus: ^10.2.2
+  package_info_plus_harmonyos: ^10.2.2
 ```
 
-执行命令
+```dart
+import 'package:package_info_plus/package_info_plus.dart';
 
-```bash
-flutter pub get
+final PackageInfo info = await PackageInfo.fromPlatform();
+print(info.appName);
+print(info.packageName);
+print(info.version);
+print(info.buildNumber);
 ```
 
-<!-- tabs:end -->
+## 鸿蒙平台限制
 
-### 1.2 使用案例
+- `installerStore` 在部分设备或分发渠道上可能为空。
+- 构建号与版本号来自 `AppScope/app.json5`，需保证打包配置正确。
+- 签名摘要依赖安装包签名信息，调试包与正式包可能不同。
 
-使用案例详见 [package_info_plus_harmonyos](./example)
+## 兼容版本
 
-## 2. 约束与限制
-
-### 2.1 兼容性
-
-在以下版本中已测试通过
-
-1. Flutter: 3.27.4-dev; SDK: 5.0.0(12); IDE: DevEco Studio: 5.0.13.200; ROM: 5.1.0.120 SP3;
+- 对应上游 Flutter 插件版本：`package_info_plus 10.2.2`
+- 平台接口依赖：`package_info_plus_platform_interface: ^4.1.0`
