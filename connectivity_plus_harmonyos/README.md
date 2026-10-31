@@ -1,42 +1,29 @@
-<p align="center">
-  <h1 align="center"> <code>connectivity_plus_harmonyos</code> </h1>
-</p>
+# connectivity_plus_harmonyos
 
-## 1. 安装与使用
+`connectivity_plus` 的鸿蒙（OpenHarmony / HarmonyOS）平台实现，兼容 Flutter 插件 `connectivity_plus 7.3.2`。
 
-### 1.1 安装方式
-
-进入到工程目录并在 pubspec.yaml 中添加以下依赖：
-
-<!-- tabs:start -->
-
-#### pubspec.yaml
+## 安装与使用
 
 ```yaml
-...
-
 dependencies:
-  connectivity_plus: ^6.1.5
-  connectivity_plus_harmonyos: ^0.0.1
-...
+  connectivity_plus: ^7.3.2
+  connectivity_plus_harmonyos: ^7.3.2
 ```
 
-执行命令
+```dart
+import 'package:connectivity_plus/connectivity_plus.dart';
 
-```bash
-flutter pub get
+final List<ConnectivityResult> result = await Connectivity().checkConnectivity();
+final Stream<List<ConnectivityResult>> stream = Connectivity().onConnectivityChanged;
 ```
 
-<!-- tabs:end -->
+## 鸿蒙平台限制
 
-### 1.2 使用案例
+- 需要在 `module.json5` 中声明 `ohos.permission.INTERNET` 与 `ohos.permission.GET_NETWORK_INFO`。
+- 网络类型与切换事件由系统连接能力决定，双卡、VPN、蓝牙共享等场景可能与 Android / iOS 表现不同。
+- 网络切换事件存在系统级延迟，实时性依赖设备实现。
 
-使用案例详见 [connectivity_plus_harmonyos](./example)
+## 兼容版本
 
-## 2. 约束与限制
-
-### 2.1 兼容性
-
-在以下版本中已测试通过
-
-1. Flutter: 3.27.4-dev; SDK: 5.0.0(12); IDE: DevEco Studio: 5.0.13.200; ROM: 5.1.0.120 SP3;
+- 对应上游 Flutter 插件版本：`connectivity_plus 7.3.2`
+- 平台接口依赖：`connectivity_plus_platform_interface: ^2.1.0`

@@ -1,16 +1,23 @@
 name: connectivity_plus_harmonyos
-description: "HarmonyOS implementation of the connectivity_plus plugin."
-version: 0.0.1
+description: "HarmonyOS (OpenHarmony) platform implementation of the connectivity_plus Flutter plugin."
+version: 7.3.2
 repository: https://github.com/Wayaer/harmony_flutter_packages/tree/main/connectivity_plus_harmonyos
+issue_tracker: https://github.com/Wayaer/harmony_flutter_packages/issues
+topics:
+  - flutter
+  - harmonyos
+  - ohos
+  - connectivity
+  - network
 
 environment:
-  sdk: '>=3.6.2 <4.0.0'
-  flutter: '>=3.27.0'
+  sdk: ^3.9.0
+  flutter: ">=3.35.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  connectivity_plus_platform_interface: ^2.0.0
+  connectivity_plus_platform_interface: ^2.1.0
 
 dev_dependencies:
   flutter_lints: ^5.0.0
