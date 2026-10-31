@@ -1,3 +1,3 @@
-import SharePlusPlugin from './src/main/ets/SharePlusPlugin';
+import SharePlusPlugin from './src/main/ets/plugin/SharePlusPlugin';
 
 export default SharePlusPlugin;

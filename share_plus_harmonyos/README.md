@@ -1,41 +1,34 @@
-<p align="center">
-  <h1 align="center"> <code>share_plus_harmonyos</code> </h1>
-</p>
+# share_plus_harmonyos
 
-## 1. 安装与使用
+`share_plus` 的鸿蒙（OpenHarmony / HarmonyOS）平台实现，兼容 Flutter 插件 `share_plus 13.3.1`。
 
-### 1.1 安装方式
-
-进入到工程目录并在 pubspec.yaml 中添加以下依赖：
-
-<!-- tabs:start -->
-
-#### pubspec.yaml
+## 安装与使用
 
 ```yaml
-...
-
 dependencies:
-  share_plus_harmonyos: ^0.0.1
-...
+  share_plus: ^13.3.1
+  share_plus_harmonyos: ^13.3.1
 ```
 
-执行命令
+```dart
+import 'package:share_plus/share_plus.dart';
 
-```bash
-flutter pub get
+await SharePlus.instance.share(
+  ShareParams(
+    text: 'Flutter HarmonyOS',
+    subject: '分享标题',
+  ),
+);
 ```
 
-<!-- tabs:end -->
+## 鸿蒙平台限制
 
-### 1.2 使用案例
+- `sharePositionOrigin` 不参与鸿蒙端弹窗定位。
+- `previewThumbnail` 暂不支持，鸿蒙端不会生效。
+- 分享结果回调在部分系统版本上可能无法区分取消与失败。
+- 分享文件需要应用对文件路径具备访问权限，大文件建议先复制到应用缓存目录。
 
-使用案例详见 [share_plus_harmonyos](./example)
+## 兼容版本
 
-## 2. 约束与限制
-
-### 2.1 兼容性
-
-在以下版本中已测试通过
-
-1. Flutter: 3.27.4-dev; SDK: 5.0.0(12); IDE: DevEco Studio: 5.0.13.200; ROM: 5.1.0.120 SP3;
+- 对应上游 Flutter 插件版本：`share_plus 13.3.1`
+- 平台接口依赖：`share_plus_platform_interface: ^7.2.0`
