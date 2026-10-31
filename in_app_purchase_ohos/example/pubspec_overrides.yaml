@@ -1,5 +1,0 @@
-# 本地开发用依赖覆盖；该文件只提交 Git，不随包发布到 pub
-
-dependency_overrides:
-  in_app_purchase_ohos:
-    path: ../

@@ -36,7 +36,6 @@ Flutter 鸿蒙（OpenHarmony / HarmonyOS）插件集合。所有包均已按下�
 | --- | --- | --- | --- | --- |
 | `file_selector_harmonyos` | `file_selector` | 1.1.0 | `br_file_selector-v1.1.0_ohos` | `file_selector/` |
 | `image_picker_harmonyos` | `image_picker` | 1.2.1 | `br_image_picker-v1.2.1_ohos` | `image_picker/` |
-| `in_app_purchase_ohos` | `in_app_purchase` | 3.2.3 | `br_in_app_purchase-v3.2.3_ohos` | `in_app_purchase/` |
 | `path_provider_harmonyos` | `path_provider` | 2.1.5 | `br_path_provider-v2.1.5_ohos` | `path_provider/` |
 | `shared_preferences_harmonyos` | `shared_preferences` | 2.5.4 | `br_shared_preferences-v2.5.4_ohos` | `shared_preferences/` |
 | `url_launcher_harmonyos` | `url_launcher` | 6.3.2 | `br_url_launcher-v6.3.2_ohos` | `url_launcher/` |
@@ -59,21 +58,10 @@ Flutter 鸿蒙（OpenHarmony / HarmonyOS）插件集合。所有包均已按下�
 
 | 鸿蒙包 | 上游 Flutter 包 | 鸿蒙插件版本 | 分支 | 仓库地址 | 仓库内目录 |
 | --- | --- | --- | --- | --- | --- |
-| `audio_session_harmonyos` | `audio_session` | 0.2.2 | `br_v0.2.2_ohos` | <https://gitcode.com/openharmony-sig/flutter_audio_session.git> | `audio_session/` |
-| `just_audio_harmonyos` | `just_audio` | 0.10.6 | `br_v0.10.6_ohos` | <https://gitcode.com/openharmony-sig/fluttertpc_just_audio.git> | `just_audio/` |
 | `permission_handler_harmonyos` | `permission_handler` | 12.0.1 | `br_v12.0.1_ohos` | <https://gitcode.com/openharmony-sig/flutter_permission_handler.git> | `permission_handler/` |
 | `wakelock_plus_harmonyos` | `wakelock_plus` | 1.8.2 | `br_v1.4.0_ohos`（代码基线，已验证兼容 1.8.2） | <https://gitcode.com/openharmony-sig/fluttertpc_wakelock_plus.git> | `wakelock_plus/` |
-| `vibration_harmonyos` | `vibration` | 3.2.1 | 无对应适配分支 | <https://atomgit.com/oh-flutter/flutter_vibration.git>（不同插件，仅供实现参考） | `flutter_vibration/` |
 
-> `vibration_harmonyos` 实现的是 pub.dev 的 `vibration` 插件；`oh-flutter/flutter_vibration` 仓库对应的是另一个插件 `flutter_vibration`（播放铃声 + 振动），API 不同，不能直接替换，因此本包只参考其鸿蒙振动实现，版本跟随 `vibration` 上游。
-
-### 3.4 依赖关系
-
-- `just_audio_harmonyos` 依赖 `audio_session_harmonyos`
-- `vibration_harmonyos` 依赖 `device_info_plus_harmonyos`
-- `just_audio_harmonyos` 示例依赖 `audio_session_harmonyos`（用于平台注册）
-- `vibration_harmonyos` 示例依赖 `device_info_plus_harmonyos`（通过 override 指向本地）
-- 仓库内本地依赖统一通过 `dependency_overrides` 指向相对路径，示例同样如此
+> 仓库内本地依赖统一通过 `pubspec_overrides.yaml` 指向相对路径，示例同样如此。
 
 ## 4. 示例程序约定
 
