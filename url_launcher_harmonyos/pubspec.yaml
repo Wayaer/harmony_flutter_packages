@@ -1,16 +1,23 @@
 name: url_launcher_harmonyos
-description: "HarmonyOS implementation of the url_launcher plugin."
-version: 0.0.1
+description: "HarmonyOS (OpenHarmony) platform implementation of the url_launcher Flutter plugin."
+version: 6.3.3
 repository: https://github.com/Wayaer/harmony_flutter_packages/tree/main/url_launcher_harmonyos
+issue_tracker: https://github.com/Wayaer/harmony_flutter_packages/issues
+topics:
+  - flutter
+  - harmonyos
+  - ohos
+  - url-launcher
+  - browser
 
 environment:
-  sdk: '>=3.6.2 <4.0.0'
-  flutter: '>=3.27.0'
+  sdk: ^3.11.0
+  flutter: ">=3.41.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  url_launcher_platform_interface: ^2.2.1
+  url_launcher_platform_interface: ^2.3.0
 
 dev_dependencies:
   flutter_lints: ^5.0.0
@@ -21,4 +28,4 @@ flutter:
     platforms:
       ohos:
         pluginClass: UrlLauncherPlugin
-        dartPluginClass: UrlLauncherHarmonyOS
+        dartPluginClass: UrlLauncherOhos

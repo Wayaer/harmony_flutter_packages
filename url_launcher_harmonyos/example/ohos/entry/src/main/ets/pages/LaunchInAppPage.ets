@@ -1,4 +1,4 @@
-import { InAppBrowser } from 'url_launcher_harmonyos/src/main/ets/InAppBrowser';
+import { InAppBrowser } from 'url_launcher_harmonyos/src/main/ets/plugin/InAppBrowser';
 
 @Entry
 @Component

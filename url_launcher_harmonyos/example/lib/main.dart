@@ -1,225 +1,273 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 void main() {
-  runApp(const App());
+  runApp(const UrlLauncherExampleApp());
 }
 
-class App extends StatelessWidget {
-  const App({super.key});
+class UrlLauncherExampleApp extends StatelessWidget {
+  const UrlLauncherExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'URL Launcher',
-        home: Scaffold(
-            appBar: AppBar(title: Text('URL Launcher')),
-            body: const HomePage()));
+      title: 'Url Launcher',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1D4ED8))),
+      home: const UrlLauncherPage(),
+    );
   }
 }
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class UrlLauncherPage extends StatefulWidget {
+  const UrlLauncherPage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<UrlLauncherPage> createState() => UrlLauncherPageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  bool _hasCallSupport = false;
-  Future<void>? _launched;
-  String _phone = '';
-  String? _launchAppGalleryLog;
+class UrlLauncherPageState extends State<UrlLauncherPage> {
+  final Uri webUri = Uri.parse('https://flutter.dev');
+  final Uri mailUri = Uri.parse('mailto:test@example.com?subject=UrlLauncher%20Demo');
+  final Uri telUri = Uri.parse('tel:10086');
+
+  final Map<String, bool> supports = <String, bool>{};
+  String? result;
+  String? error;
+  bool busy = false;
 
   @override
   void initState() {
     super.initState();
-    canLaunchUrl(Uri.parse('tel:123')).then((bool result) {
-      _hasCallSupport = result;
-      setState(() {});
+    querySupports();
+  }
+
+  Future<void> querySupports() async {
+    final Map<String, bool> values = <String, bool>{
+      '外部浏览器': await supportsLaunchMode(LaunchMode.externalApplication),
+      '应用内浏览器': await supportsLaunchMode(LaunchMode.inAppBrowserView),
+      '平台默认': await supportsLaunchMode(LaunchMode.platformDefault),
+    };
+    final bool canMail = await canLaunchUrl(mailUri);
+    final bool canTel = await canLaunchUrl(telUri);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      supports
+        ..clear()
+        ..addAll(values)
+        ..['mailto'] = canMail
+        ..['tel'] = canTel;
     });
   }
 
-  Future<void> _launchInBrowser(String url) async {
-    if (!await launch(url)) {
-      throw Exception('Could not launch $url');
-    }
-  }
-
-  Future<void> _launchInWebView(String url) async {
-    if (!await launch(
-      url,
-      forceSafariVC: true,
-      forceWebView: true,
-      headers: <String, String>{
-        'my_header_key': 'my_header_value',
-        'harmony_browser_page': 'pages/LaunchInAppPage'
-      },
-    )) {
-      throw Exception('Could not launch $url');
-    }
-  }
-
-  Future<void> _launchInWebViewWithJavaScript(String url) async {
-    if (!await launch(
-      url,
-      forceSafariVC: true,
-      forceWebView: true,
-      enableJavaScript: true,
-      headers: <String, String>{
-        'harmony_browser_page': 'pages/LaunchInAppPage'
-      },
-    )) {
-      throw Exception('Could not launch $url');
-    }
-  }
-
-  Future<void> _launchInWebViewWithDomStorage(String url) async {
-    if (!await launch(
-      url,
-      forceSafariVC: true,
-      forceWebView: true,
-      enableDomStorage: true,
-      headers: <String, String>{
-        'harmony_browser_page': 'pages/LaunchInAppPage'
-      },
-    )) {
-      throw Exception('Could not launch $url');
-    }
-  }
-
-  Future<void> _launchEmail(String url) async {
-    if (!await launch(
-      url,
-      headers: <String, String>{
-        'harmony_browser_page': 'pages/LaunchInAppPage'
-      },
-    )) {
-      throw Exception('Could not launch $url');
-    }
-  }
-
-  Widget _launchStatus(BuildContext context, AsyncSnapshot<void> snapshot) {
-    if (snapshot.hasError) {
-      return Text('Error: ${snapshot.error}');
-    } else {
-      return const Text('');
-    }
-  }
-
-  Future<void> _makePhoneCall(String phoneNumber) async {
-    // Use `Uri` to ensure that `phoneNumber` is properly URL-encoded.
-    // Just using 'tel:$phoneNumber' would create invalid URLs in some cases,
-    // such as spaces in the input, which would cause `launch` to fail on some
-    // platforms.
-    final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
-    await launch(
-      launchUri.toString(),
-      universalLinksOnly: true,
-      headers: <String, String>{},
-    );
-  }
-
-  Future<void> _launchAppGalleryDetails(String url) async {
-    //store://appgallery.huawei.com/app/detail?id=APPID'
-    if (await canLaunchUrl(Uri.parse(url))) {
-      var result = await launchUrl(
-        Uri.parse(url),
-        mode: LaunchMode.externalApplication,
-      );
-      if (result) {
-        setState(() {
-          _launchAppGalleryLog = "Launched $url";
-        });
-      } else {
-        setState(() {
-          _launchAppGalleryLog = "Could not launch $url";
-        });
+  Future<void> launch(
+    Uri uri, {
+    LaunchMode mode = LaunchMode.platformDefault,
+    WebViewConfiguration? configuration,
+  }) async {
+    setState(() => busy = true);
+    try {
+      if (!await canLaunchUrl(uri)) {
+        if (!mounted) {
+          return;
+        }
+        setState(() => result = '无法处理该链接：$uri');
+        return;
       }
-    } else {
+      final bool succeeded = await launchUrl(
+        uri,
+        mode: mode,
+        webViewConfiguration: configuration ?? const WebViewConfiguration(),
+      );
+      if (!mounted) {
+        return;
+      }
       setState(() {
-        _launchAppGalleryLog = "canLaunch=false, $url";
+        result = succeeded ? '已打开：$uri' : '打开失败：$uri';
+        error = null;
       });
+    } catch (exception) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => error = '打开链接失败: $exception');
+    } finally {
+      if (mounted) {
+        setState(() => busy = false);
+      }
+    }
+  }
+
+  Future<void> closeInApp() async {
+    try {
+      await closeInAppWebView();
+      if (!mounted) {
+        return;
+      }
+      setState(() => result = '已关闭应用内浏览器');
+    } catch (exception) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => error = '关闭失败: $exception');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    const String toLaunch = 'https://www.cylog.org/headers/';
-    return ListView(
-      children: [
-        Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-                onChanged: (String text) => _phone = text,
-                decoration: const InputDecoration(
-                    hintText: 'Input the phone number to launch'))),
-        ElevatedButton(
-            onPressed: _hasCallSupport
-                ? () => setState(() {
-                      _launched = _makePhoneCall(_phone);
-                    })
-                : null,
-            child: _hasCallSupport
-                ? const Text('Make phone call')
-                : const Text('Calling not supported')),
-        const Padding(padding: EdgeInsets.all(16.0), child: Text(toLaunch)),
-        ElevatedButton(
-            onPressed: () => setState(() {
-                  _launched = _launchInBrowser(toLaunch);
-                }),
-            child: const Text('Launch in browser')),
-        const Padding(padding: EdgeInsets.all(16.0)),
-        ElevatedButton(
-          onPressed: () => setState(() {
-            _launched = _launchInWebView(toLaunch);
-          }),
-          child: const Text('Launch in app'),
+    final ThemeData theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Url Launcher')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _Section(
+            title: '支持的启动方式',
+            icon: Icons.verified_outlined,
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final MapEntry<String, bool> entry in supports.entries)
+                  Chip(
+                    avatar: Icon(entry.value ? Icons.check_circle : Icons.cancel, size: 18),
+                    label: Text('${entry.key}：${entry.value ? '支持' : '不支持'}'),
+                  ),
+              ],
+            ),
+          ),
+          _Section(
+            title: '启动链接',
+            icon: Icons.open_in_new,
+            child: Column(
+              children: [
+                _ActionTile(
+                  icon: Icons.public,
+                  title: '外部浏览器打开网页',
+                  subtitle: 'LaunchMode.externalApplication',
+                  onTap: busy ? null : () => launch(webUri, mode: LaunchMode.externalApplication),
+                ),
+                _ActionTile(
+                  icon: Icons.tab,
+                  title: '应用内浏览器打开网页',
+                  subtitle: 'LaunchMode.inAppBrowserView',
+                  onTap: busy
+                      ? null
+                      : () => launch(
+                          webUri,
+                          mode: LaunchMode.inAppBrowserView,
+                          configuration: const WebViewConfiguration(
+                            headers: <String, String>{'harmony_browser_page': 'pages/LaunchInAppPage'},
+                          ),
+                        ),
+                ),
+                _ActionTile(
+                  icon: Icons.close,
+                  title: '关闭应用内浏览器',
+                  subtitle: 'closeInAppWebView()',
+                  onTap: busy ? null : closeInApp,
+                ),
+                _ActionTile(
+                  icon: Icons.mail_outline,
+                  title: '发送邮件',
+                  subtitle: 'mailto:',
+                  onTap: busy ? null : () => launch(mailUri),
+                ),
+                _ActionTile(
+                  icon: Icons.phone_outlined,
+                  title: '拨打电话',
+                  subtitle: 'tel:',
+                  onTap: busy ? null : () => launch(telUri),
+                ),
+              ],
+            ),
+          ),
+          if (result != null)
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                result!,
+                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onPrimaryContainer),
+              ),
+            ),
+          if (error != null)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                error!,
+                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onErrorContainer),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({required this.icon, required this.title, required this.subtitle, this.onTap});
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+    );
+  }
+}
+
+class _Section extends StatelessWidget {
+  const _Section({required this.title, required this.icon, required this.child});
+
+  final String title;
+  final IconData icon;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 16),
+      color: theme.colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 18, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(title, style: theme.textTheme.titleSmall),
+              ],
+            ),
+            const SizedBox(height: 8),
+            child,
+          ],
         ),
-        ElevatedButton(
-          onPressed: () => setState(() {
-            _launched = _launchInWebViewWithJavaScript(toLaunch);
-          }),
-          child: const Text('Launch in app (JavaScript ON)'),
-        ),
-        ElevatedButton(
-          onPressed: () => setState(() {
-            _launched = _launchInWebViewWithDomStorage(toLaunch);
-          }),
-          child: const Text('Launch in app (DOM storage ON)'),
-        ),
-        const Padding(padding: EdgeInsets.all(16.0)),
-        ElevatedButton(
-          onPressed: () => setState(() {
-            _launched = _launchInWebView(toLaunch);
-            Timer(const Duration(seconds: 5), () {
-              closeInAppWebView();
-            });
-          }),
-          child: const Text('Launch in app + close after 5 seconds'),
-        ),
-        const Padding(padding: EdgeInsets.all(16.0)),
-        ElevatedButton(
-            onPressed: () => setState(() {
-                  //此处包名应该更换成 C+AppID
-                  const String url =
-                      'store://appgallery.huawei.com/app/detail?id=com.huawei.hmsapp.himovie';
-                  _launched = _launchAppGalleryDetails(url);
-                }),
-            child: const Text('Launch AppGallery Details')),
-        if (_launchAppGalleryLog?.isNotEmpty ?? false)
-          Text(_launchAppGalleryLog!),
-        const Padding(padding: EdgeInsets.all(16.0)),
-        ElevatedButton(
-            onPressed: () => setState(() {
-                  _launched = _launchEmail('mailto:admin@exmaple.com');
-                }),
-            child: const Text('Launch in email')),
-        const Padding(padding: EdgeInsets.all(16.0)),
-        FutureBuilder<void>(future: _launched, builder: _launchStatus),
-      ],
+      ),
     );
   }
 }

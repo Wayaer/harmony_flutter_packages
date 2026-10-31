@@ -1,10 +1,24 @@
+/*
+ * Copyright (c) 2023 Hunan OpenValley Digital Industry Development Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import { BinaryMessenger } from '@ohos/flutter_ohos/src/main/ets/plugin/common/BinaryMessenger';
 import MessageCodec from '@ohos/flutter_ohos/src/main/ets/plugin/common/MessageCodec';
 import BasicMessageChannel, { Reply } from '@ohos/flutter_ohos/src/main/ets/plugin/common/BasicMessageChannel';
 import Want from '@ohos.app.ability.Want';
 import wantConstant from '@ohos.app.ability.wantConstant';
-import fileUri from '@ohos.file.fileuri';
-import { FlutterError, UrlLauncherApi, UrlLauncherApiCodec, WebViewOptions, wrapError } from './Messages';
+import fileuri from '@ohos.file.fileuri';
+import { FlutterError, UrlLauncherApi, UrlLauncherApiCodec, WebViewOptions, BrowserOptions, wrapError } from './Messages';
 import common from '@ohos.app.ability.common';
 import Log from '@ohos/flutter_ohos/src/main/ets/util/Log';
 import call from '@ohos.telephony.call';
@@ -13,6 +27,7 @@ import abilityAccessCtrl, { Permissions } from '@ohos.abilityAccessCtrl';
 import bundleManager from '@ohos.bundle.bundleManager';
 import router from '@ohos.router'
 import promptAction from '@ohos.promptAction';
+import { BusinessError } from '@kit.BasicServicesKit';
 import { emitter } from '@kit.BasicServicesKit';
 
 const TAG = 'UrlLauncher'
@@ -31,11 +46,13 @@ export class UrlLauncher implements UrlLauncherApi {
   static LAUNCH_TYPE_SMS: string = 'sms:';
   static LAUNCH_TYPE_FILE: string = 'file:';
   static LAUNCH_TYPE_APP_GALLERY: string = 'store:';
-  static LAUNCH_TYPE_ENTERPRISE: string = 'store://enterprise' // 添加企业安装方式
+  static LAUNCH_TYPE_ENTERPRISE: string = 'store://enterprise'
 
   static MMS_BUNDLE_NAME = "com.ohos.mms";
   static MMS_ABILITY_NAME = "com.ohos.mms.MainAbility";
   static MMS_ENTITIES = 'entity.system.home';
+  static SMS_QUERY_BODY_REGEX: RegExp = /(?:^|&)body=([^&]*)/;
+
   private context: common.UIAbilityContext;
 
   constructor(ctx: common.UIAbilityContext) {
@@ -59,59 +76,61 @@ export class UrlLauncher implements UrlLauncherApi {
       Log.d(TAG, "data permissions:" + data.permissions);
       Log.d(TAG, "data result:" + data.authResults);
     }, (err: Error) => {
-      Log.e(TAG, 'Failed to start ability', JSON.stringify(err));
+      Log.e(TAG,'Failed to start ability', JSON.stringify(err));
     });
   }
 
   canLaunchUrl(url: string): boolean {
     let encodedUri = encodeURI(url);
-    // Trick：由于 sms、tel、file、mailto 用 bundleManager.canOpenLink 判断会报 17700055 错误，这里暂时保留 if 这段条件判断代码
+    // sms、tel、file、mailto 等 scheme 用 bundleManager.canOpenLink 判断会报 17700055，因此这里直接按前缀返回 true
     if (encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_TEL) ||
-    encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_WEB_HTTP) ||
-    encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_WEB_HTTPS) ||
-    encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_MAILTO) ||
-    encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_SMS) ||
-    encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_FILE) ||
-    encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_APP_GALLERY)) {
+        encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_WEB_HTTP) ||
+        encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_WEB_HTTPS) ||
+        encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_MAILTO) ||
+        encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_SMS) ||
+        encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_FILE) ||
+        encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_APP_GALLERY)) {
       return true;
     }
 
     try {
-      // 除了 sms、tel、file、mailto、http、https 开头的这六种 uri 之外的，用下面的方法判断是否支持打开。
-      // 需要在 src/main/module.json5 的 querySchemes 中增加对应的头部信息，例如打开 "amapuri://route/plan/?did=xxx"，module.json5 的样例：{ "module": { "querySchemes": [ "amapuri" ] } }
+      // 其余 scheme 依赖 bundleManager.canOpenLink 判断，需要在 module.json5 的 querySchemes 中声明前缀，
+      // 例如打开 "amapuri://route/plan/?did=xxx" 需配置 "querySchemes": [ "amapuri" ]
       if (bundleManager.canOpenLink(encodedUri)) {
         return true;
       }
+      return false;
     } catch (error) {
       Log.e(TAG, 'canOpenLink error: ', JSON.stringify(error));
+      return false;
     }
-    return false;
   }
 
-  launchUrl(url: string, headers: Map<string, string>): boolean {
+  async launchUrl(url: string, headers: Map<string, string>): Promise<boolean> {
     if (!this.canLaunchUrl(url)) {
       return false;
     }
 
     this.ensureContext();
     let encodedUri = encodeURI(url);
+    Log.d(TAG, 'launchUrl. url:' + url + '  eurl:' + encodedUri);
     if (encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_TEL)) {
-      return this.launchTel(url);
+      return await this.launchTel(url);
     } else if (encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_WEB_HTTP) ||
-    encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_WEB_HTTPS)) {
-      return this.launchWeb(url, headers);
+               encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_WEB_HTTPS)) {
+      return await this.launchWeb(url, headers);
     } else if (encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_MAILTO)) {
-      return this.launchMail(url);
+      return await this.launchMail(url);
     } else if (encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_SMS)) {
-      return this.launchSms(url);
+      return await this.launchSms(url);
     } else if (encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_FILE)) {
-      return this.launchFile(url);
+      return await this.launchFile(url);
     } else if (encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_ENTERPRISE)) {
-      return this.launchOther(url);
+      return await this.launchOther(url);
     } else if (encodedUri.startsWith(UrlLauncher.LAUNCH_TYPE_APP_GALLERY)) {
-      return this.launchAppGallery(url);
+      return await this.launchAppGallery(url);
     } else {
-      return this.launchOther(url);
+      return await this.launchOther(url);
     }
   }
 
@@ -119,24 +138,55 @@ export class UrlLauncher implements UrlLauncherApi {
     let regex: RegExp = new RegExp('/[\s]/g');
     let phoneNumber = number.replace(regex, '');
     let countryId = i18n.getSystemRegion();
-    let phoneNumberFormat = new i18n.PhoneNumberFormat(countryId);
-    let isNumberValid: boolean = phoneNumberFormat.isValidNumber(phoneNumber);
+    let phoneNumberFormat= new i18n.PhoneNumberFormat(countryId);
+    let isNumberValid:boolean = phoneNumberFormat.isValidNumber(phoneNumber);
     let formatNumber = isNumberValid ? phoneNumberFormat.format(phoneNumber) : phoneNumber;
     return formatNumber;
   }
 
-  launchSms(url: string): boolean {
-    let phoneNum = this.parseUrl(url, UrlLauncher.LAUNCH_TYPE_SMS);
-    let formatNum = this.format(phoneNum);
+  async launchSms(url: string): Promise<boolean> {
+    let smsUrl = this.parseUrl(url, UrlLauncher.LAUNCH_TYPE_SMS);
+    let phoneNumber: string = '';
+    let messageBody: string = '';
+
+    let questionMarkIndex = smsUrl.indexOf('?');
+    if (questionMarkIndex !== -1) {
+      let queryString = smsUrl.substring(questionMarkIndex + 1);
+      phoneNumber = smsUrl.substring(0, questionMarkIndex);
+      let bodyMatch = queryString.match(UrlLauncher.SMS_QUERY_BODY_REGEX);
+      if (bodyMatch) {
+        try {
+          messageBody = decodeURIComponent(bodyMatch[1]);
+        } catch (e) {
+          Log.e(TAG, 'decodeURIComponent failed for sms body, raw: ' + bodyMatch[1]);
+          messageBody = bodyMatch[1];
+        }
+      }
+    } else {
+      phoneNumber = smsUrl;
+    }
+    try {
+      phoneNumber = decodeURIComponent(phoneNumber).replace(/\s+/g, '');
+    } catch (e) {
+      Log.e(TAG, 'decodeURIComponent failed for phone number, raw: ' + phoneNumber);
+      phoneNumber = phoneNumber.replace(/\s+/g, '');
+    }
+    let formatNum = this.format(phoneNumber);
+
     let msgParam = new SendMessageParams();
-    msgParam.telephone = phoneNum;
+    msgParam.telephone = phoneNumber;
     msgParam.telephoneFormat = formatNum;
+
     let params = new Array<SendMessageParams>();
     params.push(msgParam);
+
     let actionData: ESObject = {};
     actionData.contactObjects = JSON.stringify(params);
     actionData.pageFlag = 'conversation';
-    let str: Want = {
+    if (messageBody) {
+      actionData.content = messageBody;
+    }
+    let str : Want = {
       'bundleName': UrlLauncher.MMS_BUNDLE_NAME,
       'abilityName': UrlLauncher.MMS_ABILITY_NAME,
       'parameters': actionData,
@@ -144,33 +194,41 @@ export class UrlLauncher implements UrlLauncherApi {
         UrlLauncher.MMS_ENTITIES,
       ]
     };
+    Log.i(TAG, 'jumpToMms want: %s', JSON.stringify(params));
     try {
-      this.context.startAbility(str)
-    } catch (err) {
-      Log.e(TAG, 'jumpToMms failed: %s', JSON.stringify(err));
+      await this.context.startAbility(str);
+      Log.i(TAG, 'jumpToMms success.');
+      return true;
+    } catch (error) {
+      Log.e(TAG, 'jumpToMms failed: %s', JSON.stringify(error));
       return false;
     }
-    return true
   }
 
-  launchTel(url: string): boolean {
-    let phoneNum = this.parseUrl(url, UrlLauncher.LAUNCH_TYPE_TEL + ':');
+  async launchTel(url: string): Promise<boolean> {
+    let phoneNum = this.parseUrl(url, UrlLauncher.LAUNCH_TYPE_TEL);
     try {
-      call.makeCall(phoneNum)
+ 	    phoneNum = decodeURIComponent(phoneNum).replace(/\s+/g, '');
+ 	  } catch (e) {
+ 	    phoneNum = phoneNum.replace(/\s+/g, '');
+ 	  };
+ 	  Log.d(TAG, 'launchTel:' + phoneNum);
+    try {
+      await call.makeCall(phoneNum);
+      Log.e(TAG, `launchTel success`);
+      return true;
     } catch (err) {
       Log.e(TAG, `launchTel failed,  error: ${JSON.stringify(err)}`);
       return false;
     }
-    return true;
   }
 
   // 只支持沙箱路径
-  launchFile(url: string): boolean {
+  async launchFile(url: string): Promise<boolean> {
     let fileUrl = this.parseUrl(url, UrlLauncher.LAUNCH_TYPE_FILE + '://');
     let fileName = url.substring(url.lastIndexOf('/') + 1);
     let filePath = this.context.filesDir + '/' + fileName;
-    // 将沙箱路径转换为uri
-    let uriFromPath = fileUri.getUriFromPath(filePath);
+    let uriFromPath = fileuri.getUriFromPath(filePath);
     Log.d(TAG, 'launchFile:' + fileUrl + '  uriFromPath:' + uriFromPath);
     let want: Want = {
       flags: wantConstant.Flags.FLAG_AUTH_WRITE_URI_PERMISSION | wantConstant.Flags.FLAG_AUTH_READ_URI_PERMISSION,
@@ -179,19 +237,23 @@ export class UrlLauncher implements UrlLauncherApi {
       uri: uriFromPath,
     }
     try {
-      this.context.startAbility(want)
+      await this.context.startAbility(want);
+      Log.i(TAG, 'Invoke getCurrentBundleStats succeeded.');
+      return true;
     } catch (err) {
       Log.e(TAG, `Invoke startAbility failed, code is ${err.code}, message is ${err.message}`);
-      return false
+      return false;
     }
-    return true;
   }
 
-  launchWeb(url: string, headers: Map<string, string>): boolean {
-    let params: Record<string, Object> = {};
+  async launchWeb(url: string, headers: Map<string, string>): Promise<boolean> {
+    Log.d(TAG, 'launchWeb url:' + url);
+    let params: Record<string, Object>  = {};
+
     for (let val of headers) {
       params[val[0]] = val[1]
     }
+
     let want: Want = {
       uri: url,
       parameters: params,
@@ -199,7 +261,7 @@ export class UrlLauncher implements UrlLauncherApi {
       action: 'ohos.want.action.viewData',
     }
     try {
-      this.context.startAbility(want)
+      await this.context.startAbility(want)
     } catch (e) {
       Log.e(TAG, 'launchWeb failed. err:' + JSON.stringify(e))
       return false
@@ -207,14 +269,14 @@ export class UrlLauncher implements UrlLauncherApi {
     return true;
   }
 
-  launchMail(url: string): boolean {
-    let mailAddress = this.parseUrl(url, UrlLauncher.LAUNCH_TYPE_MAILTO + ':');
+  async launchMail(url: string): Promise<boolean> {
+    // 邮件应用需要带 mailto: scheme 的完整 URI 才能正确匹配收件人。
     let want: Want = {
+      uri: url,
       action: 'ohos.want.action.sendToData',
-      uri: mailAddress
     }
     try {
-      this.context.startAbility(want)
+      await this.context.startAbility(want)
     } catch (e) {
       Log.e(TAG, 'launchMail failed. err:' + JSON.stringify(e))
       return false
@@ -222,20 +284,16 @@ export class UrlLauncher implements UrlLauncherApi {
     return true;
   }
 
-  /**
-   * 跳转到应用商店详情页
-   * 文档参考：https://developer.huawei.com/consumer/cn/doc/harmonyos-faqs/faqs-ability-kit#section42001122242
-   * @param url
-   * @returns
-   */
-  launchAppGallery(url: string): boolean {
-    //url 格式示范 store://appgallery.huawei.com/app/detail?id=C5765880207855137621
+  // 跳转应用商店详情页，参考：https://developer.huawei.com/consumer/cn/doc/harmonyos-faqs/faqs-ability-kit#section42001122242
+  async launchAppGallery(url: string): Promise<boolean> {
+    Log.d(TAG, 'launchAppGallery:' + url);
+    // url 格式示范 store://appgallery.huawei.com/app/detail?id=C5765880207855137621
     let want: Want = {
       'action': 'ohos.want.action.appdetail',
       'uri': url,
     };
     try {
-      this.context.startAbility(want)
+      await this.context.startAbility(want)
     } catch (e) {
       Log.e(TAG, 'launchAppGallery failed. err:' + JSON.stringify(e))
       return false
@@ -243,12 +301,12 @@ export class UrlLauncher implements UrlLauncherApi {
     return true
   }
 
-  launchOther(url: string): boolean {
+  async launchOther(url: string): Promise<boolean> {
     let want: Want = {
       uri: url,
     }
     try {
-      this.context.startAbility(want)
+      await this.context.startAbility(want)
     } catch (e) {
       Log.e(TAG, 'launchOther failed. err:' + JSON.stringify(e))
       return false
@@ -260,7 +318,8 @@ export class UrlLauncher implements UrlLauncherApi {
     if (url == null || url == undefined) {
       return ''
     }
-    return url.replace(prefix, '');
+    // 只去除开头的协议前缀，避免误删 URL 中其他位置的相同字符串。
+    return url.startsWith(prefix) ? url.substring(prefix.length) : url;
   }
 
   private ensureContext(): void {
@@ -270,7 +329,7 @@ export class UrlLauncher implements UrlLauncherApi {
     }
   }
 
-  openUrlInWebView(url: string, options: WebViewOptions): boolean {
+  openUrlInWebView(url: string, options: WebViewOptions, browserOptions: BrowserOptions): boolean {
     let headers = options.getHeaders();
     if (!headers.has('harmony_browser_page')) {
       promptAction.showToast({
@@ -278,25 +337,45 @@ export class UrlLauncher implements UrlLauncherApi {
       });
       return false;
     }
-
     let harmonyBrowserPage = headers.get('harmony_browser_page');
-    try {
-      router.pushUrl({ url: harmonyBrowserPage, params: { 'url': url, 'options': options } })
-    } catch (e) {
-      Log.e(TAG, 'Failed to open url: ', harmonyBrowserPage, ', Error: ', JSON.stringify(e));
-      if (e.code == 100002) {
+
+    let headerMap: Record<string, string> = {};
+    headers.forEach((value: string, key: string) => {
+      if (key !== 'harmony_browser_page') {
+        headerMap[key] = value;
+      }
+    });
+
+    // 路由参数需要可序列化的普通对象，不能直接传自定义类实例
+    const webViewOptions: Record<string, Object> = {
+      'enableJavaScript': options.getEnableJavaScript(),
+      'enableDomStorage': options.getEnableDomStorage(),
+    };
+    const browserOptionsMap: Record<string, Object> = {
+      'showTitle': browserOptions.getShowTitle(),
+    };
+    router.pushUrl({
+      url: harmonyBrowserPage,
+      params: {
+        'url': url,
+        'options': webViewOptions,
+        'headers': headerMap,
+        'browserOptions': browserOptionsMap,
+      }
+    }).catch((error: BusinessError) => {
+      Log.e(TAG, 'Failed to open url: ', harmonyBrowserPage, ', Error: ', JSON.stringify(error));
+      if (error.code == 100002) {
         promptAction.showToast({
-          message: harmonyBrowserPage + ' 页面不存在，或者没有在 main_pages.json 中声明',
+          message: `页面 "${harmonyBrowserPage}" 不存在， 请在鸿蒙工程中创建该页面并注册路由。`,
         });
       }
-      return false
-    }
+    });
     return true;
   }
 
   closeWebView(): boolean {
-    emitter.emit("closeWebView");
-    return true;
+      emitter.emit("closeWebView");
+      return true
   }
 
   getCodec(): MessageCodec<ESObject> {
@@ -310,7 +389,9 @@ export class UrlLauncher implements UrlLauncherApi {
       }
       let channel: BasicMessageChannel<ESObject> = new BasicMessageChannel<ESObject>(
         binaryMessenger, "dev.flutter.pigeon.UrlLauncherApi.canLaunchUrl", this.getCodec());
+      Log.d(TAG, 'setup launchUrl')
       if (api != null && api != undefined) {
+        Log.d(TAG, 'setMessageHandler')
         channel.setMessageHandler({
           onMessage(msg: ESObject, reply: Reply<ESObject>): void {
             let wrapped = new Array<Object>();
@@ -333,21 +414,25 @@ export class UrlLauncher implements UrlLauncherApi {
     {
       let channel = new BasicMessageChannel<Object>(
         binaryMessenger, "dev.flutter.pigeon.UrlLauncherApi.launchUrl", this.getCodec());
+      Log.d(TAG, 'setup launchUrl')
       if (api != null && api != undefined) {
+        Log.d(TAG, 'setMessageHandler')
         channel.setMessageHandler({
           onMessage(msg: ESObject, reply: Reply<ESObject>): void {
-            let wrapped = new Array<Object>();
             let args = msg as Array<Object>;
             let urlArg = args[0] as string;
             let headersArg = args[1] as Map<string, string>;
             try {
-              let output = api.launchUrl(urlArg, headersArg);
-              wrapped.push(output);
+              api.launchUrl(urlArg, headersArg).then((output: boolean) => {
+                let result = new Array<Object>();
+                result.push(output);
+                reply.reply(result);
+              }).catch((err: ESObject) => {
+                reply.reply(wrapError(err));
+              });
             } catch (err) {
-              let errs = wrapError(err);
-              wrapped = errs;
+              reply.reply(wrapError(err));
             }
-            reply.reply(wrapped)
           }
         });
       } else {
@@ -357,15 +442,18 @@ export class UrlLauncher implements UrlLauncherApi {
     {
       let channel = new BasicMessageChannel<Object>(
         binaryMessenger, "dev.flutter.pigeon.UrlLauncherApi.openUrlInWebView", this.getCodec());
+      Log.d(TAG, 'setup launchUrl')
       if (api != null && api != undefined) {
+        Log.d(TAG, 'setMessageHandler')
         channel.setMessageHandler({
           onMessage(msg: ESObject, reply: Reply<ESObject>): void {
             let wrapped = new Array<Object>();
             let args = msg as Array<Object>;
             let urlArg = args[0] as string;
             let optionsArg = args[1] as WebViewOptions;
+            let browserOptionsArg = args[2] as BrowserOptions;
             try {
-              let output = api.openUrlInWebView(urlArg, optionsArg);
+              let output = api.openUrlInWebView(urlArg, optionsArg, browserOptionsArg);
               wrapped.push(output);
             } catch (err) {
               let errs = wrapError(err);
@@ -381,7 +469,9 @@ export class UrlLauncher implements UrlLauncherApi {
     {
       let channel = new BasicMessageChannel<Object>(
         binaryMessenger, "dev.flutter.pigeon.UrlLauncherApi.closeWebView", this.getCodec());
+      Log.d(TAG, 'setup launchUrl')
       if (api != null && api != undefined) {
+        Log.d(TAG, 'setMessageHandler')
         channel.setMessageHandler({
           onMessage(msg: ESObject, reply: Reply<ESObject>): void {
             let wrapped = new Array<Object>();
