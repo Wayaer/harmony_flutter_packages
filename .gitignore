@@ -1,0 +1,25 @@
+# Dart / Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+build/
+doc/api/
+*.iml
+.idea/
+
+# HarmonyOS build artifacts
+.hvigor/
+oh_modules/
+local.properties
+oh-package-lock.json5
+package.json
+package-lock.json
+node_modules/
+
+# HarmonyOS generated plugin registrant / preview
+**/entry/src/main/ets/plugins/
+**/src/main/ets/plugins/
+**/entry/.preview/
+**/.preview/
+**/libs/
