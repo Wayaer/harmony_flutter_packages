@@ -13,5 +13,5 @@
 * limitations under the License.
 */
 
-import AudioSessionPlugin from './src/main/ets/components/plugin/AudioSessionPlugin';
+import AudioSessionPlugin from './src/main/ets/plugin/AudioSessionPlugin';
 export default AudioSessionPlugin;

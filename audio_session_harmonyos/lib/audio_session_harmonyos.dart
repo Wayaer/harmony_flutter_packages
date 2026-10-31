@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 export 'package:audio_session/audio_session.dart';
 
 class AudioSessionHarmonyOS {
-  static const MethodChannel _channel = MethodChannel('com.ryanheise.ohos_audio_manager');
+  static const MethodChannel _channel = MethodChannel(
+    'com.ryanheise.ohos_audio_manager',
+  );
   static AudioSessionHarmonyOS? _instance;
 
   OhosOnAudioDevicesChanged? _onAudioDevicesAdded;
@@ -46,7 +48,8 @@ class AudioSessionHarmonyOS {
               _decodeEnum(
                 AudioSessionDeactivatedReason.values,
                 args[0] as int?,
-                defaultValue: AudioSessionDeactivatedReason.deactivatedLowerPriority,
+                defaultValue:
+                    AudioSessionDeactivatedReason.deactivatedLowerPriority,
               ),
             );
           }
@@ -55,13 +58,22 @@ class AudioSessionHarmonyOS {
     });
   }
 
-  Future<bool> setInterruptionEventListener(OhosInterruptListernerRequest listernerRequest) async {
+  Future<bool> setInterruptionEventListener(
+    OhosInterruptListernerRequest listernerRequest,
+  ) async {
     _onAudioFocusChanged = listernerRequest.onAudioFocusChanged;
-    return (await _channel.invokeMethod<bool>('setInterruptionEventListener', [listernerRequest.toJson()]))!;
+    return (await _channel.invokeMethod<bool>('setInterruptionEventListener', [
+      listernerRequest.toJson(),
+    ]))!;
   }
 
-  Future<bool> setActive(bool active, {AudioConcurrencyMode? concurrencyMode}) async =>
-      (await _channel.invokeMethod<bool>('setActive', [active, concurrencyMode?.index]))!;
+  Future<bool> setActive(
+    bool active, {
+    AudioConcurrencyMode? concurrencyMode,
+  }) async => (await _channel.invokeMethod<bool>('setActive', [
+    active,
+    concurrencyMode?.index,
+  ]))!;
 
   Future<bool> isVolumeUnadjustable() async {
     return (await _channel.invokeMethod<bool>('isVolumeUnadjustable'))!;
@@ -76,11 +88,17 @@ class AudioSessionHarmonyOS {
   }
 
   Future<int> getMaxVolume(AudioVolumeType streamType) async {
-    return (await _channel.invokeMethod<int>('getMaxVolume', streamType.value))!;
+    return (await _channel.invokeMethod<int>(
+      'getMaxVolume',
+      streamType.value,
+    ))!;
   }
 
   Future<int> getMinVolume(AudioVolumeType streamType) async {
-    return (await _channel.invokeMethod<int>('getMinVolume', streamType.value))!;
+    return (await _channel.invokeMethod<int>(
+      'getMinVolume',
+      streamType.value,
+    ))!;
   }
 
   Future<int> getVolume(AudioVolumeType streamType) async {
@@ -88,7 +106,10 @@ class AudioSessionHarmonyOS {
   }
 
   Future<int> getSystemVolumeInDb(AudioVolumeType streamType) async {
-    return (await _channel.invokeMethod<int>('getSystemVolumeInDb', streamType.value))!;
+    return (await _channel.invokeMethod<int>(
+      'getSystemVolumeInDb',
+      streamType.value,
+    ))!;
   }
 
   Future<bool> isMute(AudioVolumeType streamType) async {
@@ -96,7 +117,9 @@ class AudioSessionHarmonyOS {
   }
 
   Future<List<OhosAudioDeviceDescriptor>> getDevices(DevicesFlags flags) async {
-    return _decodeAudioDevices((await _channel.invokeMethod<dynamic>('getDevices', [flags.value]))!);
+    return _decodeAudioDevices(
+      (await _channel.invokeMethod<dynamic>('getDevices', [flags.value]))!,
+    );
   }
 
   Future<void> setSpeakerphoneOn(bool enabled) async {
@@ -154,15 +177,21 @@ class AudioSessionHarmonyOS {
   }
 }
 
-typedef OhosOnAudioFocusChanged = void Function(AudioSessionDeactivatedReason focus);
-typedef OhosOnAudioDevicesChanged = void Function(List<OhosAudioDeviceDescriptor> devices);
+typedef OhosOnAudioFocusChanged =
+    void Function(AudioSessionDeactivatedReason focus);
+typedef OhosOnAudioDevicesChanged =
+    void Function(List<OhosAudioDeviceDescriptor> devices);
 
 class OhosInterruptEvent {
   final OhosInterruptType eventType;
   final OhosInterruptForceType forceType;
   final OhosInterruptHint hintType;
 
-  OhosInterruptEvent({required this.eventType, required this.forceType, required this.hintType});
+  OhosInterruptEvent({
+    required this.eventType,
+    required this.forceType,
+    required this.hintType,
+  });
 }
 
 class OhosInterruptType {
@@ -193,9 +222,17 @@ enum OhosInterruptHint {
 
 enum AudioRingMode { ringerModeSilent, ringerModeVibrate, ringerModeNormal }
 
-enum AudioScene { audioSceneDefault, audioSceneRinging, audioScenePhoneCall, audioSceneVoiceChat }
+enum AudioScene {
+  audioSceneDefault,
+  audioSceneRinging,
+  audioScenePhoneCall,
+  audioSceneVoiceChat,
+}
 
-enum AudioSessionDeactivatedReason { deactivatedLowerPriority, deactivatedTimeout }
+enum AudioSessionDeactivatedReason {
+  deactivatedLowerPriority,
+  deactivatedTimeout,
+}
 
 class DevicesFlags {
   static const DevicesFlags noneDevicesFlag = DevicesFlags(0);
@@ -210,14 +247,17 @@ class DevicesFlags {
 
   const DevicesFlags(this.value);
 
-  DevicesFlags operator |(DevicesFlags flag) => DevicesFlags(value | flag.value);
+  DevicesFlags operator |(DevicesFlags flag) =>
+      DevicesFlags(value | flag.value);
 
-  DevicesFlags operator &(DevicesFlags flag) => DevicesFlags(value & flag.value);
+  DevicesFlags operator &(DevicesFlags flag) =>
+      DevicesFlags(value & flag.value);
 
   bool contains(DevicesFlags flags) => flags.value & value == flags.value;
 
   @override
-  bool operator ==(Object other) => other is DevicesFlags && value == other.value;
+  bool operator ==(Object other) =>
+      other is DevicesFlags && value == other.value;
 
   @override
   int get hashCode => value.hashCode;
@@ -258,7 +298,8 @@ class AudioEncodingType {
   const AudioEncodingType._(this.value);
 
   @override
-  bool operator ==(Object other) => other is AudioEncodingType && value == other.value;
+  bool operator ==(Object other) =>
+      other is AudioEncodingType && value == other.value;
 
   @override
   int get hashCode => value.hashCode;
@@ -323,7 +364,16 @@ extension DeviceTypeExtension on DeviceType {
   }
 }
 
-enum AudioVolumeType { voiceCall, ringTone, media, alarm, accessibility, voiceAssistant, ultraSonic, all }
+enum AudioVolumeType {
+  voiceCall,
+  ringTone,
+  media,
+  alarm,
+  accessibility,
+  voiceAssistant,
+  ultraSonic,
+  all,
+}
 
 extension AudioVolumeTypeExtension on AudioVolumeType {
   int get value => [0, 2, 3, 4, 5, 9, 10, 100][index];
@@ -345,33 +395,41 @@ class OhosAudioAttributes {
   });
 
   OhosAudioAttributes.fromJson(Map<String, dynamic> data)
-      : this(
-          streamUsage: _decodeMapEnum(StreamUsage.values, data['streamUsage'] as int?, defaultValue: StreamUsage.unknown),
-          samplingRate: _decodeMapEnum(
-            AudioSamplingRate.values,
-            data['samplingRate'] as int?,
-            defaultValue: AudioSamplingRate.sampleRate48000,
-          ),
-          channels: _decodeMapEnum(AudioChannel.values, data['channels'] as int?, defaultValue: AudioChannel.channel2),
-          sampleFormat: _decodeMapEnum(
-            AudioSampleFormat.values,
-            data['sampleFormat'] as int?,
-            defaultValue: AudioSampleFormat.sampleFormatS16LE,
-          ),
-          encodingType: _decodeMapEnum(
-            AudioEncodingType.values,
-            data['encodingType'] as int?,
-            defaultValue: AudioEncodingType.encodingTypeRaw,
-          ),
-        );
+    : this(
+        streamUsage: _decodeMapEnum(
+          StreamUsage.values,
+          data['streamUsage'] as int?,
+          defaultValue: StreamUsage.unknown,
+        ),
+        samplingRate: _decodeMapEnum(
+          AudioSamplingRate.values,
+          data['samplingRate'] as int?,
+          defaultValue: AudioSamplingRate.sampleRate48000,
+        ),
+        channels: _decodeMapEnum(
+          AudioChannel.values,
+          data['channels'] as int?,
+          defaultValue: AudioChannel.channel2,
+        ),
+        sampleFormat: _decodeMapEnum(
+          AudioSampleFormat.values,
+          data['sampleFormat'] as int?,
+          defaultValue: AudioSampleFormat.sampleFormatS16LE,
+        ),
+        encodingType: _decodeMapEnum(
+          AudioEncodingType.values,
+          data['encodingType'] as int?,
+          defaultValue: AudioEncodingType.encodingTypeRaw,
+        ),
+      );
 
   Map<String, dynamic> toJson() => {
-        'streamUsage': streamUsage.value,
-        'samplingRate': samplingRate.value,
-        'channels': channels.value,
-        'sampleFormat': sampleFormat.value,
-        'encodingType': encodingType.value,
-      };
+    'streamUsage': streamUsage.value,
+    'samplingRate': samplingRate.value,
+    'channels': channels.value,
+    'sampleFormat': sampleFormat.value,
+    'encodingType': encodingType.value,
+  };
 }
 
 class StreamUsage {
@@ -408,7 +466,8 @@ class StreamUsage {
   const StreamUsage._(this.value);
 
   @override
-  bool operator ==(Object other) => other is StreamUsage && value == other.value;
+  bool operator ==(Object other) =>
+      other is StreamUsage && value == other.value;
 
   @override
   int get hashCode => value.hashCode;
@@ -419,9 +478,16 @@ class OhosInterruptListernerRequest {
   final OhosOnAudioFocusChanged onAudioFocusChanged;
   final bool isOnListener;
 
-  const OhosInterruptListernerRequest({this.audioAttributes, required this.onAudioFocusChanged, required this.isOnListener});
+  const OhosInterruptListernerRequest({
+    this.audioAttributes,
+    required this.onAudioFocusChanged,
+    required this.isOnListener,
+  });
 
-  Map<String, dynamic> toJson() => {'audioAttributes': audioAttributes?.toJson(), 'isOnListener': isOnListener};
+  Map<String, dynamic> toJson() => {
+    'audioAttributes': audioAttributes?.toJson(),
+    'isOnListener': isOnListener,
+  };
 }
 
 class AudioSamplingRate {
@@ -455,7 +521,8 @@ class AudioSamplingRate {
   const AudioSamplingRate._(this.value);
 
   @override
-  bool operator ==(Object other) => other is AudioSamplingRate && value == other.value;
+  bool operator ==(Object other) =>
+      other is AudioSamplingRate && value == other.value;
 
   @override
   int get hashCode => value.hashCode;
@@ -501,7 +568,8 @@ class AudioChannel {
   const AudioChannel._(this.value);
 
   @override
-  bool operator ==(Object other) => other is AudioChannel && value == other.value;
+  bool operator ==(Object other) =>
+      other is AudioChannel && value == other.value;
 
   @override
   int get hashCode => value.hashCode;
@@ -527,15 +595,25 @@ class AudioSampleFormat {
   const AudioSampleFormat._(this.value);
 
   @override
-  bool operator ==(Object other) => other is AudioSampleFormat && value == other.value;
+  bool operator ==(Object other) =>
+      other is AudioSampleFormat && value == other.value;
 
   @override
   int get hashCode => value.hashCode;
 }
 
-enum AudioConcurrencyMode { concurrencyDefault, concurrencyMixWithOthers, concurrencyDuckOthers, concurrencyPauseOthers }
+enum AudioConcurrencyMode {
+  concurrencyDefault,
+  concurrencyMixWithOthers,
+  concurrencyDuckOthers,
+  concurrencyPauseOthers,
+}
 
 T _decodeEnum<T>(List<T> values, int? index, {required T defaultValue}) =>
     index != null && index < values.length ? values[index] : defaultValue;
 
-T _decodeMapEnum<T>(Map<int, T> values, int? index, {required T defaultValue}) => values[index] ?? defaultValue;
+T _decodeMapEnum<T>(
+  Map<int, T> values,
+  int? index, {
+  required T defaultValue,
+}) => values[index] ?? defaultValue;
