@@ -6,90 +6,27 @@ import 'package:vibration_platform_interface/vibration_platform_interface.dart';
 
 export 'package:vibration_platform_interface/vibration_platform_interface.dart';
 
+/// HarmonyOS implementation of [VibrationPlatform].
 class VibrationHarmonyOS extends VibrationPlatform {
   /// Registers this class as the default instance of [VibrationHarmonyOS].
   static void registerWith() {
     VibrationPlatform.instance = VibrationHarmonyOS();
   }
 
-  final DeviceInfoPlusPlugin _deviceInfoPlugin = DeviceInfoPlusPlugin();
+  final _deviceInfoPlugin = DeviceInfoPlusPlugin();
 
   /// Method channel to communicate with native code.
-  final MethodChannel _channel = const MethodChannel('vibration');
+  final _channel = const MethodChannel('vibration');
 
-  /// Check if vibrator is available on device.
-  ///
-  /// ```dart
-  /// if (await Vibration.hasVibrator()) {
-  ///   Vibration.vibrate();
-  /// }
-  /// ```
   @override
-  Future<bool> hasVibrator() async {
-    try {
-      final harmonyOSInfo = await _deviceInfoPlugin.harmonyOSInfo;
-      return harmonyOSInfo.isPhysicalDevice;
-    } on PlatformException {
-      return false;
-    } on UnsupportedError {
-      return false;
-    }
-  }
+  Future<bool> hasVibrator() => _isPhysicalDevice();
 
-  /// Check if the vibrator has amplitude control.
-  ///
-  /// ```dart
-  /// if (await Vibration.hasAmplitudeControl()) {
-  ///   Vibration.vibrate(amplitude: 128);
-  /// }
-  /// ```
   @override
-  Future<bool> hasAmplitudeControl() async {
-    try {
-      final harmonyOSInfo = await _deviceInfoPlugin.harmonyOSInfo;
-      return harmonyOSInfo.isPhysicalDevice;
-    } on PlatformException {
-      return false;
-    } on UnsupportedError {
-      return false;
-    }
-  }
+  Future<bool> hasAmplitudeControl() => _isPhysicalDevice();
 
-  /// Check if the device is able to vibrate with a custom
-  /// [duration], [pattern] or [intensities].
-  /// May return `true` even if the device has no vibrator.
-  ///
-  /// ```dart
-  /// if (await Vibration.hasCustomVibrationsSupport()) {
-  ///   Vibration.vibrate(duration: 1000);
-  /// } else {
-  ///   Vibration.vibrate();
-  ///   await Future.delayed(Duration(milliseconds: 500));
-  ///   Vibration.vibrate();
-  /// }
-  /// ```
   @override
-  Future<bool> hasCustomVibrationsSupport() async {
-    try {
-      return true;
-    } on MissingPluginException {
-      return Future.value(false);
-    }
-  }
+  Future<bool> hasCustomVibrationsSupport() async => true;
 
-  /// Vibrate with [duration] at [amplitude] or [pattern] at [intensities].
-  ///
-  /// The default vibration duration is 500ms.
-  /// Amplitude is a range from 1 to 255, if supported.
-  ///
-  /// ```dart
-  /// Vibration.vibrate(duration: 1000);
-  ///
-  /// if (await Vibration.hasAmplitudeControl()) {
-  ///   Vibration.vibrate(duration: 1000, amplitude: 1);
-  ///   Vibration.vibrate(duration: 1000, amplitude: 255);
-  /// }
-  /// ```
   @override
   Future<void> vibrate({
     int duration = 500,
@@ -97,30 +34,36 @@ class VibrationHarmonyOS extends VibrationPlatform {
     int repeat = -1,
     List<int> intensities = const [],
     int amplitude = -1,
-    double sharpness = 1.0,
+    double sharpness = 0.5,
     // ohos only
     VibrateEffect? vibrateEffect,
     // ohos only
     VibrateAttribute vibrateAttribute = const VibrateAttribute(),
-  }) =>
-      _channel.invokeMethod("vibrate", {
-        "vibrateEffect":
-            (vibrateEffect ?? (repeat > 0 ? VibratePreset(count: repeat) : VibrateTime(duration: duration))).toMap(),
-        "vibrateAttribute": vibrateAttribute.toString(),
-      });
+  }) {
+    final effect =
+        vibrateEffect ??
+        (repeat > 0
+            ? VibratePreset(count: repeat)
+            : VibrateTime(duration: duration));
+    return _channel.invokeMethod('vibrate', {
+      'vibrateEffect': effect.toMap(),
+      'vibrateAttribute': vibrateAttribute.toString(),
+    });
+  }
 
-  /// This method is used to cancel an ongoing vibration.
-  /// iOS: only works for custom haptic vibrations using `CHHapticEngine.
-  ///
-  /// ```dart
-  /// Vibration.vibrate(duration: 10000);
-  /// Vibration.cancel();
-  /// ```
   @override
-  Future<void> cancel() => _channel.invokeMethod("cancel");
+  Future<void> cancel() => _channel.invokeMethod('cancel');
+
+  Future<bool> _isPhysicalDevice() async {
+    try {
+      final info = await _deviceInfoPlugin.harmonyOSInfo;
+      return info.isPhysicalDevice;
+    } on PlatformException {
+      return false;
+    }
+  }
 }
 
-/// vibration effect.
 /// 马达振动效果。
 mixin VibrateEffect {
   Map<String, dynamic> toMap();
@@ -129,24 +72,20 @@ mixin VibrateEffect {
   String toString() => jsonEncode(toMap());
 }
 
-/// See also: https://docs.openharmony.cn/pages/v4.0/zh-cn/application-dev/reference/apis/js-apis-vibrator.md#vibrateeffect9
+/// 按持续时间振动。
 class VibrateTime with VibrateEffect {
-  /// The duration of continuous motor vibration, in milliseconds.
-  /// 马达持续振动时长, 单位ms。
+  /// 马达持续振动时长，单位 ms。
   final int duration;
 
   const VibrateTime({required this.duration});
 
   @override
-  Map<String, dynamic> toMap() => {
-        'type': 'time',
-        'duration': duration,
-      };
+  Map<String, dynamic> toMap() => {'type': 'time', 'duration': duration};
 }
 
-/// See also: https://docs.openharmony.cn/pages/v4.0/zh-cn/application-dev/reference/apis/js-apis-vibrator.md#vibrateeffect9
+/// 按预置效果振动。
 class VibratePreset with VibrateEffect {
-  /// 预置的振动效果ID。
+  /// 预置的振动效果 ID。
   final String effectId;
 
   /// 重复振动的次数。
@@ -159,26 +98,26 @@ class VibratePreset with VibrateEffect {
 
   @override
   Map<String, dynamic> toMap() => {
-        'type': 'preset',
-        'effectId': effectId,
-        'count': count,
-      };
+    'type': 'preset',
+    'effectId': effectId,
+    'count': count,
+  };
 }
 
-/// See also: https://docs.openharmony.cn/pages/v4.0/zh-cn/application-dev/reference/apis/js-apis-vibrator.md#vibrateeffect9
+/// 从振动配置文件振动。
 class VibrateFromFile with VibrateEffect {
   final HapticFileDescriptor hapticFd;
 
   const VibrateFromFile({required this.hapticFd});
 
   @override
-  Map<String, dynamic> toMap() => {'type': 'file', 'hapticFd': hapticFd.toMap()};
+  Map<String, dynamic> toMap() => {
+    'type': 'file',
+    'hapticFd': hapticFd.toMap(),
+  };
 }
 
-/// Descriptor for custom vibration configuration file
-/// Custom vibration types, supported by only some devices
-/// 自定义振动配置文件的描述符
-/// 自定义振动类型，仅部分设备支持
+/// 自定义振动配置文件的描述符，仅部分设备支持。
 class HapticFileDescriptor {
   final int? offset;
   final int? length;
@@ -187,36 +126,23 @@ class HapticFileDescriptor {
   const HapticFileDescriptor({this.offset, this.length, required this.data});
 
   Map<String, dynamic> toMap() => {
-        if (offset != null) 'offset': offset,
-        if (length != null) 'length': length,
-        'data': data,
-      };
+    if (offset != null) 'offset': offset,
+    if (length != null) 'length': length,
+    'data': data,
+  };
 }
 
 /// 马达振动属性。
 class VibrateAttribute {
   final int? id;
 
-  ///  'unknown' | 'alarm' | 'ring' |
-  ///  'notification' | 'communication' | 'touch' |
-  ///  'media' | 'physicalFeedback' | 'simulateReality';
-  /// unknown	没有明确使用场景，最低优先级。
-  /// alarm		用于警报场景。
-  /// ring		用于铃声场景。
-  /// notification		用于通知场景。
-  /// communication		用于通信场景。
-  /// touch		用于触摸场景。
-  /// media		用于多媒体场景。
-  /// physicalFeedback	用于物理反馈场景。
-  /// simulateReality		用于模拟现实场景。
+  /// 'unknown' | 'alarm' | 'ring' | 'notification' | 'communication' |
+  /// 'touch' | 'media' | 'physicalFeedback' | 'simulateReality'
   final String usage;
 
   const VibrateAttribute({this.id, this.usage = 'unknown'});
 
-  Map<String, dynamic> toMap() => {
-        if (id != null) 'id': id,
-        'usage': usage,
-      };
+  Map<String, dynamic> toMap() => {if (id != null) 'id': id, 'usage': usage};
 
   @override
   String toString() => jsonEncode(toMap());
