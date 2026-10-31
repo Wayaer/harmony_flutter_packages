@@ -20,5 +20,5 @@
  * SOFTWARE.
  * */
 
-import JustAudioOhosPlugin from './src/main/ets/JustAudioOhosPlugin';
+import JustAudioOhosPlugin from './src/main/ets/plugin/JustAudioOhosPlugin';
 export default JustAudioOhosPlugin;

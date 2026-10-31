@@ -25,9 +25,11 @@ import { EventSink, StreamHandler } from "@ohos/flutter_ohos/src/main/ets/plugin
 
 export class BetterEventChannel implements EventSink {
   private eventSink: EventSink | null = null;
+  private eventChannel: EventChannel | null = null;
 
   constructor(messenger: BinaryMessenger, id: string) {
     let eventChannel: EventChannel = new EventChannel(messenger, id);
+    this.eventChannel = eventChannel;
     eventChannel.setStreamHandler({
       onListen: (args: Object, eventSink: EventSink) => {
         this.eventSink = eventSink;
@@ -58,5 +60,13 @@ export class BetterEventChannel implements EventSink {
     if (this.eventSink != null) {
       this.eventSink.endOfStream();
     }
+  }
+
+  dispose() {
+    if (this.eventChannel) {
+      this.eventChannel.setStreamHandler(null);
+      this.eventChannel = null;
+    }
+    this.eventSink = null;
   }
 }

@@ -3,21 +3,17 @@ description: "Demonstrates how to use the just_audio_harmonyos plugin."
 publish_to: 'none'
 
 environment:
-  sdk: ^3.6.2
+  sdk: ^3.9.0
+  flutter: ">=3.35.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  audio_session: ^0.2.2
-  rxdart: ^0.28.0
-  just_audio: ^0.10.5
-  just_audio_harmonyos:
-    path: ../
+  just_audio: ^0.10.6
+  just_audio_harmonyos: ^0.10.6
 
 dev_dependencies:
   flutter_lints: ^5.0.0
 
 flutter:
   uses-material-design: true
-  assets:
-    - audio/

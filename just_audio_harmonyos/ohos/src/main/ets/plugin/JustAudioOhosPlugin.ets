@@ -28,6 +28,8 @@ import { MainMethodCallHandler } from './MainMethodCallHandler'
 export default class JustAudioOhosPlugin implements FlutterPlugin {
   private channel: MethodChannel | null = null;
   private methodCallHandler: MainMethodCallHandler | null = null;
+  // 保存 EngineLifecycleListener 引用，便于 onDetachedFromEngine 时移除，避免匿名对象捕获 this 导致插件实例无法 GC
+  private lifecycleListener: EngineLifecycleListener | null = null;
 
   getUniqueClassName(): string {
     return "JustAudioOhosPlugin"
@@ -41,21 +43,33 @@ export default class JustAudioOhosPlugin implements FlutterPlugin {
     this.channel = new MethodChannel(messenger, "com.ryanheise.just_audio.methods");
     this.channel.setMethodCallHandler(this.methodCallHandler)
     let engine: FlutterEngine = binding.getFlutterEngine();
-    engine.addEngineLifecycleListener({
+    this.lifecycleListener = {
       onPreEngineRestart: () => {
         this.methodCallHandler?.dispose();
       },
       onEngineWillDestroy: () => {
 
       }
-    } as EngineLifecycleListener);
+    } as EngineLifecycleListener;
+    engine.addEngineLifecycleListener(this.lifecycleListener);
   }
 
   onDetachedFromEngine(binding: FlutterPluginBinding): void {
+    // 1. 移除 EngineLifecycleListener，打破对插件实例的引用
+    let engine: FlutterEngine = binding.getFlutterEngine();
+    if (this.lifecycleListener != null) {
+      engine.removeEngineLifecycleListener(this.lifecycleListener);
+      this.lifecycleListener = null;
+    }
+    // 2. 释放 handler
     this.methodCallHandler?.dispose();
     this.methodCallHandler = null;
+    // 3. 取消 channel handler 并置 null
     if (this.channel != null) {
       this.channel.setMethodCallHandler(null)
+      this.channel = null;
     }
+    // 4. 清理 AppStorage 中缓存的全局 context 引用，避免插件销毁后仍持有 applicationContext
+    AppStorage.delete('context');
   }
 }

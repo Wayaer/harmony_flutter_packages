@@ -1,17 +1,24 @@
 name: just_audio_harmonyos
-description: "HarmonyOS implementation of the just_audio plugin."
-version: 0.0.1
+description: "HarmonyOS (OpenHarmony) platform implementation of the just_audio Flutter plugin."
+version: 0.10.6
 repository: https://github.com/Wayaer/harmony_flutter_packages/tree/main/just_audio_harmonyos
+issue_tracker: https://github.com/Wayaer/harmony_flutter_packages/issues
+topics:
+  - flutter
+  - harmonyos
+  - ohos
+  - audio
+  - player
 
 environment:
-  sdk: '>=3.6.2 <4.0.0'
-  flutter: '>=3.27.0'
+  sdk: ^3.9.0
+  flutter: ">=3.35.0"
 
 dependencies:
   flutter:
     sdk: flutter
+  audio_session_harmonyos: ^0.2.2
   just_audio_platform_interface: ^4.6.0
-  audio_session_harmonyos: ^0.0.1
 
 dev_dependencies:
   flutter_lints: ^5.0.0

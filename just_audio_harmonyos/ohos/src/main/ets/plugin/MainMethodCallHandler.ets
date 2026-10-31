@@ -34,37 +34,48 @@ export class MainMethodCallHandler implements MethodCallHandler {
     this.messenger = messenger;
   }
 
-  onMethodCall(call: MethodCall, result: MethodResult): void {
-    switch (call.method) {
-      case 'init':
-        let id: string = call.argument("id");
-        if (this.players.has(id)) {
-          result.error("Platform player " + id + " already exists", null, null);
+  async onMethodCall(call: MethodCall, result: MethodResult): Promise<void> {
+    try {
+      switch (call.method) {
+        case 'init':
+          let id: string = call.argument('id');
+          if (id == null || id === '') {
+            result.error('id is null', null, null);
+            break;
+          }
+          if (this.players.has(id)) {
+            result.error('Platform player ' + id + ' already exists', null, null);
+            break;
+          }
+          if (this.applicationContext && this.messenger) {
+            let player = new AudioPlayer(this.messenger, id);
+            // 等待 MediaAvPlayer 初始化完成（createAVPlayer/session 等）再响应，
+            // 避免 Dart 端收到 'init' 后立即 load 时底层 avPlayer 尚未就绪
+            await player.waitForInitialization();
+            this.players.set(id, player);
+          }
+          result.success(null);
           break;
-        }
-        if (this.applicationContext && this.messenger) {
-          this.players.set(id, new AudioPlayer(this.messenger, id));
-        }
-        result.success(null);
-        break;
-      case 'disposePlayer':
-        let playerId: string = call.argument("id");
-        let player: AudioPlayer | undefined = this.players.get(playerId);
-        if (player != null) {
-          player.dispose();
-          this.players.delete(playerId);
-        }
-        result.success(new Map<String, Object>());
-        break;
-      case 'disposeAllPlayers':
-        this.dispose();
-        result.success(new Map<String, Object>());
-        break;
-      default:
-        result.notImplemented();
-        break;
+        case 'disposePlayer':
+          let playerId: string = call.argument('id');
+          let player: AudioPlayer | undefined = this.players.get(playerId);
+          if (player != null) {
+            player.dispose();
+            this.players.delete(playerId);
+          }
+          result.success(new Map<String, Object>());
+          break;
+        case 'disposeAllPlayers':
+          this.dispose();
+          result.success(new Map<String, Object>());
+          break;
+        default:
+          result.notImplemented();
+          break;
+      }
+    } catch (e) {
+      result.error('Error', e instanceof Error ? e.message : JSON.stringify(e), null);
     }
-
   }
 
   dispose() {

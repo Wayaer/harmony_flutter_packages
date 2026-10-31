@@ -37,6 +37,7 @@ export default class MediaSource implements media.MediaSource {
   shuffleOrder: number[] = []
   childMediaSource: MediaSource[] = []
   mimeType: media.AVMimeTypes = media.AVMimeTypes.APPLICATION_M3U8
+  isEnableOfflineCache: boolean = false; //api 23 开始支持
 
   setStartUs(startUs: number): MediaSource {
     this.startUs = startUs;
@@ -65,6 +66,11 @@ export default class MediaSource implements media.MediaSource {
     Log.d("MediaSource", "empty implement")
   }
 
+  // api 23 新增接口
+  enableOfflineCache(enable: boolean): void {
+    this.isEnableOfflineCache = enable;
+  }
+
   getMimeType(): media.AVMimeTypes {
     return this.mimeType;
   }
@@ -83,6 +89,11 @@ export default class MediaSource implements media.MediaSource {
   }
 
   getId(): string {
+    return this.id;
+  }
+
+  // media.MediaSource 接口要求实现的 getID，返回 setId 设置的本源标识
+  getID(): string {
     return this.id;
   }
 
