@@ -4,13 +4,11 @@
 
 import 'package:in_app_purchase_platform_interface/in_app_purchase_platform_interface.dart';
 
-import '../iap_kit_wrappers.dart';
-import '../in_app_purchase_ohos.dart';
+import 'package:in_app_purchase_ohos/iap_kit_wrappers.dart';
+import 'package:in_app_purchase_ohos/in_app_purchase_ohos.dart';
 
 /// Contains InApp Purchase features that are only available on ohos.
-class InAppPurchaseOhosPlatformAddition
-    extends InAppPurchasePlatformAddition {
-
+class InAppPurchaseOhosPlatformAddition extends InAppPurchasePlatformAddition {
   /// Retry loading purchase data after an initial failure.
   ///
   /// If no results, a `null` value is returned.
@@ -19,14 +17,16 @@ class InAppPurchaseOhosPlatformAddition
     try {
       final String receipt = await IKReceiptManager.retrieveReceiptData();
       return PurchaseVerificationData(
-          localVerificationData: receipt,
-          serverVerificationData: receipt,
-          source: kIAPSource);
+        localVerificationData: receipt,
+        serverVerificationData: receipt,
+        source: kIAPSource,
+      );
     } catch (e) {
       // ignore: avoid_print
       print(
-          'Something is wrong while fetching the receipt, this normally happens when the app is '
-          'running on a simulator: $e');
+        'Something is wrong while fetching the receipt, this normally happens when the app is '
+        'running on a simulator: $e',
+      );
       return null;
     }
   }

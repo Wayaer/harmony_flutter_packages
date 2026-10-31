@@ -6,8 +6,8 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 
-import '../channel.dart';
-import 'ik_product_wrapper.dart';
+import 'package:in_app_purchase_ohos/src/channel.dart';
+import 'package:in_app_purchase_ohos/src/iap_kit_wrappers/ik_product_wrapper.dart';
 
 /// A request maker that handles all the requests made by IKRequest subclasses.
 class IKRequestMaker {
@@ -21,12 +21,13 @@ class IKRequestMaker {
   /// [SkProductResponseWrapper] is returned if there is no error during the request.
   /// A [PlatformException] is thrown if the platform code making the request fails.
   Future<IKProductResponseWrapper> startProductRequest(
-      List<String> productIdentifiers) async {
-    final Map<String, dynamic>? productResponseMap =
-        await channel.invokeMapMethod<String, dynamic>(
-      'iap#queryProducts',
-      productIdentifiers,
-    );
+    List<String> productIdentifiers,
+  ) async {
+    final Map<String, dynamic>? productResponseMap = await channel
+        .invokeMapMethod<String, dynamic>(
+          'iap#queryProducts',
+          productIdentifiers,
+        );
     if (productResponseMap == null) {
       throw PlatformException(
         code: 'storekit_no_response',
@@ -36,11 +37,9 @@ class IKRequestMaker {
     return IKProductResponseWrapper.fromJson(productResponseMap);
   }
 
-  Future<void> startRefreshReceiptRequest(
-      {Map<String, dynamic>? receiptProperties}) {
-    return channel.invokeMethod<void>(
-      'iap#refreshReceipt',
-      receiptProperties,
-    );
+  Future<void> startRefreshReceiptRequest({
+    Map<String, dynamic>? receiptProperties,
+  }) {
+    return channel.invokeMethod<void>('iap#refreshReceipt', receiptProperties);
   }
 }

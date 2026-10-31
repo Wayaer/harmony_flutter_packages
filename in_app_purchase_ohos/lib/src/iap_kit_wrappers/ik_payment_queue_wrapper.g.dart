@@ -7,28 +7,26 @@ part of 'ik_payment_queue_wrapper.dart';
 // **************************************************************************
 
 IKError _$IKErrorFromJson(Map json) => IKError(
-      code: json['code'] as int? ?? 0,
-      domain: json['domain'] as String? ?? '',
-      userInfo: (json['userInfo'] as Map?)?.map(
-            (k, e) => MapEntry(k as String, e),
-          ) ??
-          {},
-    );
+  code: json['code'] as int? ?? 0,
+  domain: json['domain'] as String? ?? '',
+  userInfo:
+      (json['userInfo'] as Map?)?.map((k, e) => MapEntry(k as String, e)) ?? {},
+);
 
 IKPaymentWrapper _$IKPaymentWrapperFromJson(Map json) => IKPaymentWrapper(
-      productId: json['productId'] as String? ?? '',
-      productType: _$IKProductTypeFromInt(json['productType'] as int? ?? 0),
-      developerPayload: json['developerPayload'] as String?,
-      reservedInfo: json['reservedInfo'] as String?,
-      promotionalOfferId: json['promotionalOfferId'] as String?,
-      applicationUserName: json['applicationUserName'] as String?,
-      jwsRepresentation: json['jwsRepresentation'] as String?,
-    );
+  productId: json['productId'] as String? ?? '',
+  productType: _$IKProductTypeFromInt(json['productType'] as int? ?? 0),
+  developerPayload: json['developerPayload'] as String?,
+  reservedInfo: json['reservedInfo'] as String?,
+  promotionalOfferId: json['promotionalOfferId'] as String?,
+  applicationUserName: json['applicationUserName'] as String?,
+  jwsRepresentation: json['jwsRepresentation'] as String?,
+);
 
 Map<String, dynamic> _$IKPaymentWrapperToJson(IKPaymentWrapper instance) =>
     <String, dynamic>{
       'productId': instance.productId,
-      'productType': instance.productType,
+      'productType': _productTypeToValue(instance.productType),
       'developerPayload': instance.developerPayload,
       'reservedInfo': instance.reservedInfo,
       'promotionalOfferId': instance.promotionalOfferId,
@@ -42,8 +40,10 @@ ProductType _$IKProductTypeFromInt(int type) {
       return ProductType.CONSUMABLE;
     case 1:
       return ProductType.NONCONSUMABLE;
-    case 3:
+    case 2:
       return ProductType.AUTORENEWABLE;
+    case 3:
+      return ProductType.NONRENEWABLE;
     default:
       return ProductType.CONSUMABLE;
   }

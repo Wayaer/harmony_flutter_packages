@@ -2,10 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase_platform_interface/in_app_purchase_platform_interface.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-import '../../iap_kit_wrappers.dart';
+import 'package:in_app_purchase_ohos/iap_kit_wrappers.dart';
 
 part 'enum_converters.g.dart';
 
@@ -24,15 +25,18 @@ class IKTransactionStatusConverter
       return IKPaymentTransactionStateWrapper.unspecified;
     }
     return $enumDecode<IKPaymentTransactionStateWrapper, dynamic>(
-        _$IKPaymentTransactionStateWrapperEnumMap
-            .cast<IKPaymentTransactionStateWrapper, dynamic>(),
-        json);
+      _$IKPaymentTransactionStateWrapperEnumMap
+          .cast<IKPaymentTransactionStateWrapper, dynamic>(),
+      json,
+    );
   }
 
   /// Converts an [IKPaymentTransactionStateWrapper] to a [PurchaseStatus].
   PurchaseStatus toPurchaseStatus(
-      IKPaymentTransactionStateWrapper object, IKError? error) {
-    print('MethodCallHandlerImpl toPurchaseStatus. $object');
+    IKPaymentTransactionStateWrapper object,
+    IKError? error,
+  ) {
+    debugPrint('MethodCallHandlerImpl toPurchaseStatus. $object');
     switch (object) {
       case IKPaymentTransactionStateWrapper.purchasing:
       case IKPaymentTransactionStateWrapper.deferred:
@@ -74,9 +78,10 @@ class IKSubscriptionPeriodUnitConverter
       return IKSubscriptionPeriodUnit.day;
     }
     return $enumDecode<IKSubscriptionPeriodUnit, dynamic>(
-        _$IKSubscriptionPeriodUnitEnumMap
-            .cast<IKSubscriptionPeriodUnit, dynamic>(),
-        json);
+      _$IKSubscriptionPeriodUnitEnumMap
+          .cast<IKSubscriptionPeriodUnit, dynamic>(),
+      json,
+    );
   }
 
   @override
@@ -99,9 +104,10 @@ class IKProductDiscountPaymentModeConverter
       return IKProductDiscountPaymentMode.payAsYouGo;
     }
     return $enumDecode<IKProductDiscountPaymentMode, dynamic>(
-        _$IKProductDiscountPaymentModeEnumMap
-            .cast<IKProductDiscountPaymentMode, dynamic>(),
-        json);
+      _$IKProductDiscountPaymentModeEnumMap
+          .cast<IKProductDiscountPaymentMode, dynamic>(),
+      json,
+    );
   }
 
   @override
@@ -133,8 +139,9 @@ class IKProductDiscountTypeConverter
       return IKProductDiscountType.introductory;
     }
     return $enumDecode<IKProductDiscountType, dynamic>(
-        _$IKProductDiscountTypeEnumMap.cast<IKProductDiscountType, dynamic>(),
-        json);
+      _$IKProductDiscountTypeEnumMap.cast<IKProductDiscountType, dynamic>(),
+      json,
+    );
   }
 
   @override

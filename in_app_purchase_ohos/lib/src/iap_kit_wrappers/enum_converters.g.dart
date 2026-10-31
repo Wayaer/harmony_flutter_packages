@@ -1,4 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: unused_element
 
 part of 'enum_converters.dart';
 
@@ -7,11 +8,15 @@ part of 'enum_converters.dart';
 // **************************************************************************
 
 _SerializedEnums _$SerializedEnumsFromJson(Map json) => _SerializedEnums()
-  ..response =
-      $enumDecode(_$IKPaymentTransactionStateWrapperEnumMap, json['response'])
+  ..response = $enumDecode(
+    _$IKPaymentTransactionStateWrapperEnumMap,
+    json['response'],
+  )
   ..unit = $enumDecode(_$IKSubscriptionPeriodUnitEnumMap, json['unit'])
   ..discountPaymentMode = $enumDecode(
-      _$IKProductDiscountPaymentModeEnumMap, json['discountPaymentMode']);
+    _$IKProductDiscountPaymentModeEnumMap,
+    json['discountPaymentMode'],
+  );
 
 const _$IKPaymentTransactionStateWrapperEnumMap = {
   IKPaymentTransactionStateWrapper.purchasing: 0,

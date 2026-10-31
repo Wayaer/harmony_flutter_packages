@@ -4,15 +4,14 @@
 
 import 'dart:async';
 
-import '../channel.dart';
+import 'package:in_app_purchase_ohos/src/channel.dart';
 
 // ignore: avoid_classes_with_only_static_members
 /// This class contains static methods to manage StoreKit receipts.
 class IKReceiptManager {
   /// Retrieve the receipt data from your application's main bundle.
   static Future<String> retrieveReceiptData() async {
-    return (await channel.invokeMethod<String>(
-            'iap#retrieveReceiptData')) ??
+    return (await channel.invokeMethod<String>('iap#retrieveReceiptData')) ??
         '';
   }
 }

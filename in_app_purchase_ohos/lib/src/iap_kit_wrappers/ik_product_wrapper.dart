@@ -2,11 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// ignore_for_file: constant_identifier_names
+
 import 'package:collection/collection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'enum_converters.dart';
+
+import 'package:in_app_purchase_ohos/src/iap_kit_wrappers/enum_converters.dart';
 
 // WARNING: Changes to `@JsonSerializable` classes need to be reflected in the
 // below generated file. Run `flutter packages pub run build_runner watch` to
@@ -22,14 +25,15 @@ class IKProductResponseWrapper {
   // TODO(stuartmorgan): Temporarily ignore const warning in other parts of the
   // federated package, and remove this.
   // ignore: prefer_const_constructors_in_immutables
-  IKProductResponseWrapper(
-      {required this.products, required this.invalidProductIdentifiers});
+  IKProductResponseWrapper({
+    required this.products,
+    required this.invalidProductIdentifiers,
+  });
 
   /// Constructing an instance from a map from the Objective-C layer.
   ///
   /// This method should only be used with `map` values returned by [IKRequestMaker.startProductRequest].
   factory IKProductResponseWrapper.fromJson(Map<String, dynamic> map) {
-    var maptt = _$SkProductResponseWrapperFromJson(map);
     return _$SkProductResponseWrapperFromJson(map);
   }
 
@@ -55,8 +59,10 @@ class IKProductResponseWrapper {
     }
     return other is IKProductResponseWrapper &&
         const DeepCollectionEquality().equals(other.products, products) &&
-        const DeepCollectionEquality()
-            .equals(other.invalidProductIdentifiers, invalidProductIdentifiers);
+        const DeepCollectionEquality().equals(
+          other.invalidProductIdentifiers,
+          invalidProductIdentifiers,
+        );
   }
 
   @override
@@ -73,11 +79,9 @@ enum IKSubscriptionPeriodUnit {
 
   /// An interval lasting one month.
   @JsonValue(1)
-
   /// An interval lasting one week.
   week,
   @JsonValue(2)
-
   /// An interval lasting one month.
   month,
 
@@ -95,17 +99,22 @@ class IKProductSubscriptionPeriodWrapper {
   // TODO(stuartmorgan): Temporarily ignore const warning in other parts of the
   // federated package, and remove this.
   // ignore: prefer_const_constructors_in_immutables
-  IKProductSubscriptionPeriodWrapper(
-      {required this.numberOfUnits, required this.unit});
+  IKProductSubscriptionPeriodWrapper({
+    required this.numberOfUnits,
+    required this.unit,
+  });
 
   /// Constructing an instance from a map from the Objective-C layer.
   ///
   /// This method should only be used with `map` values returned by [IKProductDiscountWrapper.fromJson] or [IKProductWrapper.fromJson].
   factory IKProductSubscriptionPeriodWrapper.fromJson(
-      Map<String, dynamic>? map) {
+    Map<String, dynamic>? map,
+  ) {
     if (map == null) {
       return IKProductSubscriptionPeriodWrapper(
-          numberOfUnits: 0, unit: IKSubscriptionPeriodUnit.day);
+        numberOfUnits: 0,
+        unit: IKSubscriptionPeriodUnit.day,
+      );
     }
     return _$IKProductSubscriptionPeriodWrapperFromJson(map);
   }
@@ -157,7 +166,6 @@ enum IKProductDiscountPaymentMode {
   @JsonValue(-1)
   unspecified,
 }
-
 
 /// This is used as a property in the [IKProductDiscountWrapper].
 /// The values of the enum options are matching the [IKProductDiscountType]'s
@@ -259,8 +267,12 @@ enum ProductType {
   NONCONSUMABLE,
 
   /// 自动续期订阅商品
-  @JsonValue(3)
+  @JsonValue(2)
   AUTORENEWABLE,
+
+  /// 非续期订阅商品
+  @JsonValue(3)
+  NONRENEWABLE,
 }
 
 /// 商品状态枚举

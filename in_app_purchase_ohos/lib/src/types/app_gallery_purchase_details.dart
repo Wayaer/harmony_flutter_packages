@@ -4,9 +4,10 @@
 
 import 'package:in_app_purchase_platform_interface/in_app_purchase_platform_interface.dart';
 
-import '../../iap_kit_wrappers.dart';
-import '../../in_app_purchase_ohos.dart';
-import '../iap_kit_wrappers/enum_converters.dart';
+import 'package:flutter/foundation.dart';
+import 'package:in_app_purchase_ohos/iap_kit_wrappers.dart';
+import 'package:in_app_purchase_ohos/in_app_purchase_ohos.dart';
+import 'package:in_app_purchase_ohos/src/iap_kit_wrappers/enum_converters.dart';
 
 /// The class represents the information of a purchase made with the IAP Kit
 /// AppGallery.
@@ -28,22 +29,26 @@ class AppGalleryPurchaseDetails extends PurchaseDetails {
     IKPaymentTransactionWrapper transaction,
     String base64EncodedReceipt,
   ) {
-    print('MethodCallHandlerImpl AppGalleryPurchaseDetails.fromIKTransaction ');
+    debugPrint(
+      'MethodCallHandlerImpl AppGalleryPurchaseDetails.fromIKTransaction ',
+    );
     final AppGalleryPurchaseDetails purchaseDetails = AppGalleryPurchaseDetails(
       productID: transaction.payment.productId,
       purchaseID: transaction.transactionIdentifier,
       ikPaymentTransaction: transaction,
-      status: const IKTransactionStatusConverter()
-          .toPurchaseStatus(transaction.transactionState, transaction.error),
+      status: const IKTransactionStatusConverter().toPurchaseStatus(
+        transaction.transactionState,
+        transaction.error,
+      ),
       transactionDate: transaction.transactionTimeStamp != null
           ? (transaction.transactionTimeStamp! * 1000).toInt().toString()
           : null,
       verificationData: PurchaseVerificationData(
-          localVerificationData: base64EncodedReceipt,
-          serverVerificationData: base64EncodedReceipt,
-          source: kIAPSource),
+        localVerificationData: base64EncodedReceipt,
+        serverVerificationData: base64EncodedReceipt,
+        source: kIAPSource,
+      ),
     );
-    var statuus = purchaseDetails.status;
     if (purchaseDetails.status == PurchaseStatus.error ||
         purchaseDetails.status == PurchaseStatus.canceled) {
       purchaseDetails.error = IAPError(
@@ -68,7 +73,8 @@ class AppGalleryPurchaseDetails extends PurchaseDetails {
 
   @override
   set status(PurchaseStatus status) {
-    _pendingCompletePurchase = status == PurchaseStatus.purchased;
+    _pendingCompletePurchase =
+        status == PurchaseStatus.purchased || status == PurchaseStatus.restored;
     _status = status;
   }
 
@@ -76,4 +82,9 @@ class AppGalleryPurchaseDetails extends PurchaseDetails {
 
   @override
   bool get pendingCompletePurchase => _pendingCompletePurchase;
+
+  /// Marks that the platform-specific completion step has already been handled.
+  void markCompletePurchaseHandled() {
+    _pendingCompletePurchase = false;
+  }
 }

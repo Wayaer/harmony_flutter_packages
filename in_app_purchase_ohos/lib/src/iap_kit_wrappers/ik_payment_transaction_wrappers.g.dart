@@ -9,13 +9,16 @@ part of 'ik_payment_transaction_wrappers.dart';
 IKPaymentTransactionWrapper _$IKPaymentTransactionWrapperFromJson(Map json) =>
     IKPaymentTransactionWrapper(
       payment: IKPaymentWrapper.fromJson(
-          Map<String, dynamic>.from(json['payment'] as Map)),
-      transactionState: const IKTransactionStatusConverter()
-          .fromJson(json['transactionState'] as int?),
+        Map<String, dynamic>.from(json['payment'] as Map),
+      ),
+      transactionState: const IKTransactionStatusConverter().fromJson(
+        json['transactionState'] as int?,
+      ),
       originalTransaction: json['originalTransaction'] == null
           ? null
           : IKPaymentTransactionWrapper.fromJson(
-              Map<String, dynamic>.from(json['originalTransaction'] as Map)),
+              Map<String, dynamic>.from(json['originalTransaction'] as Map),
+            ),
       transactionTimeStamp: (json['transactionTimeStamp'] as num?)?.toDouble(),
       transactionIdentifier: json['transactionIdentifier'] as String?,
       error: json['error'] == null
@@ -24,13 +27,14 @@ IKPaymentTransactionWrapper _$IKPaymentTransactionWrapperFromJson(Map json) =>
     );
 
 Map<String, dynamic> _$IKPaymentTransactionWrapperToJson(
-        IKPaymentTransactionWrapper instance) =>
-    <String, dynamic>{
-      'transactionState': const IKTransactionStatusConverter()
-          .toJson(instance.transactionState),
-      'payment': instance.payment,
-      'originalTransaction': instance.originalTransaction,
-      'transactionTimeStamp': instance.transactionTimeStamp,
-      'transactionIdentifier': instance.transactionIdentifier,
-      'error': instance.error,
-    };
+  IKPaymentTransactionWrapper instance,
+) => <String, dynamic>{
+  'transactionState': const IKTransactionStatusConverter().toJson(
+    instance.transactionState,
+  ),
+  'payment': instance.payment,
+  'originalTransaction': instance.originalTransaction,
+  'transactionTimeStamp': instance.transactionTimeStamp,
+  'transactionIdentifier': instance.transactionIdentifier,
+  'error': instance.error,
+};

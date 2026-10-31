@@ -1,19 +1,16 @@
 name: in_app_purchase_ohos_example
-description: Demonstrates how to use the in_app_purchase_ohos plugin.
-publish_to: none
+description: "Demonstrates how to use the in_app_purchase_ohos plugin."
+publish_to: 'none'
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
-  flutter: ">=3.10.0"
+  sdk: ^3.9.0
+  flutter: ">=3.35.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  in_app_purchase: ^3.2.3
-  in_app_purchase_ohos:
-    path: ../
-  shared_preferences: ^2.5.3
-  shared_preferences_harmonyos: ^0.0.1
+  in_app_purchase: ^3.3.1
+  in_app_purchase_ohos: ^3.2.3
 
 dev_dependencies:
   flutter_lints: ^5.0.0

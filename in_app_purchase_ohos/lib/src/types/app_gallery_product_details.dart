@@ -4,7 +4,7 @@
 
 import 'package:in_app_purchase_platform_interface/in_app_purchase_platform_interface.dart';
 
-import '../../iap_kit_wrappers.dart';
+import 'package:in_app_purchase_ohos/iap_kit_wrappers.dart';
 
 /// The class represents the information of a product as registered in the AppGallery Connect
 /// AppGallery.

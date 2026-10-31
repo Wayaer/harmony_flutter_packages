@@ -5,14 +5,29 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-import '../../iap_kit_wrappers.dart';
-import '../channel.dart';
+import 'package:in_app_purchase_ohos/iap_kit_wrappers.dart';
+import 'package:in_app_purchase_ohos/src/channel.dart';
 
 part 'ik_payment_queue_wrapper.g.dart';
+
+int? _productTypeToValue(ProductType? productType) {
+  switch (productType) {
+    case ProductType.CONSUMABLE:
+      return 0;
+    case ProductType.NONCONSUMABLE:
+      return 1;
+    case ProductType.AUTORENEWABLE:
+      return 2;
+    case ProductType.NONRENEWABLE:
+      return 3;
+    case null:
+      return null;
+  }
+}
 
 class IKPaymentQueueWrapper {
   /// Returns the default payment queue.
@@ -30,8 +45,9 @@ class IKPaymentQueueWrapper {
   IKTransactionObserverWrapper? _observer;
 
   Future<List<IKPaymentTransactionWrapper>> transactions() async {
-    return _getTransactionList((await channel
-        .invokeListMethod<dynamic>('iap#transactions'))!);
+    return _getTransactionList(
+      (await channel.invokeListMethod<dynamic>('iap#transactions'))!,
+    );
   }
 
   static Future<bool> queryEnvironmentStatus() async =>
@@ -49,28 +65,27 @@ class IKPaymentQueueWrapper {
       channel.invokeMethod<void>('iap#stopObservingTransactionQueue');
 
   Future<void> addPayment(IKPaymentWrapper payment) async {
-    assert(_observer != null,
-        '[in_app_purchase]: Trying to add a payment without an observer. One must be set using `IKPaymentQueueWrapper.setTransactionObserver` before the app launches.');
-    final Map<String, dynamic> requestMap = payment.toMap();
-    await channel.invokeMethod<void>(
-      'iap#createPurchase',
-      requestMap,
+    assert(
+      _observer != null,
+      '[in_app_purchase]: Trying to add a payment without an observer. One must be set using `IKPaymentQueueWrapper.setTransactionObserver` before the app launches.',
     );
+    final Map<String, dynamic> requestMap = payment.toMap();
+    await channel.invokeMethod<void>('iap#createPurchase', requestMap);
   }
 
   Future<void> finishTransaction(
-      IKPaymentTransactionWrapper transaction) async {
-    final Map<String, String?> requestMap = transaction.toFinishMap();
-    await channel.invokeMethod<void>(
-      'iap#finishPurchase',
-      requestMap,
-    );
+    IKPaymentTransactionWrapper transaction,
+  ) async {
+    final Map<String, Object?> requestMap = transaction.toFinishMap();
+    await channel.invokeMethod<void>('iap#finishPurchase', requestMap);
   }
 
   // 暂未实现
   Future<void> restoreTransactions({String? applicationUserName}) async {
     await channel.invokeMethod<void>(
-        'iap#restoreTransactions', applicationUserName);
+      'iap#restoreTransactions',
+      applicationUserName,
+    );
   }
 
   /// Triage a method channel call from the platform and triggers the correct observer method.
@@ -79,14 +94,18 @@ class IKPaymentQueueWrapper {
   /// outside this class.
   @visibleForTesting
   Future<dynamic> handleObserverCallbacks(MethodCall call) async {
-    assert(_observer != null,
-        '[in_app_purchase]: (Fatal)The observer has not been set but we received a purchase transaction notification. Please ensure the observer has been set using `setTransactionObserver`. Make sure the observer is added right at the App Launch.');
-    print('MethodCallHandlerImpl handleObserverCallbacks : ' + call.method);
+    assert(
+      _observer != null,
+      '[in_app_purchase]: (Fatal)The observer has not been set but we received a purchase transaction notification. Please ensure the observer has been set using `setTransactionObserver`. Make sure the observer is added right at the App Launch.',
+    );
+    debugPrint(
+      'MethodCallHandlerImpl handleObserverCallbacks : ${call.method}',
+    );
     final IKTransactionObserverWrapper observer = _observer!;
     switch (call.method) {
       case 'updatedTransactions':
         {
-          print('MethodCallHandlerImpl   handleObserverCallbacks');
+          debugPrint('MethodCallHandlerImpl   handleObserverCallbacks');
           final List<IKPaymentTransactionWrapper> transactions =
               _getTransactionList(call.arguments as List<dynamic>);
           return Future<void>(() {
@@ -105,17 +124,21 @@ class IKPaymentQueueWrapper {
         break;
     }
     throw PlatformException(
-        code: 'no_such_callback',
-        message: 'Did not recognize the observer callback ${call.method}.');
+      code: 'no_such_callback',
+      message: 'Did not recognize the observer callback ${call.method}.',
+    );
   }
 
   // Get transaction wrapper object list from arguments.
   List<IKPaymentTransactionWrapper> _getTransactionList(
-      List<dynamic> transactionsData) {
+    List<dynamic> transactionsData,
+  ) {
     return transactionsData.map<IKPaymentTransactionWrapper>((dynamic map) {
       return IKPaymentTransactionWrapper.fromJson(
-          Map.castFrom<dynamic, dynamic, String, dynamic>(
-              map as Map<dynamic, dynamic>));
+        Map.castFrom<dynamic, dynamic, String, dynamic>(
+          map as Map<dynamic, dynamic>,
+        ),
+      );
     }).toList();
   }
 }
@@ -124,8 +147,11 @@ class IKPaymentQueueWrapper {
 @JsonSerializable()
 class IKError {
   /// Creates a new [IKError] object with the provided information.
-  const IKError(
-      {required this.code, required this.domain, required this.userInfo});
+  const IKError({
+    required this.code,
+    required this.domain,
+    required this.userInfo,
+  });
 
   /// Constructs an instance of this from a key-value map of data.
   ///
@@ -159,16 +185,14 @@ class IKError {
     return other is IKError &&
         other.code == code &&
         other.domain == domain &&
-        const DeepCollectionEquality.unordered()
-            .equals(other.userInfo, userInfo);
+        const DeepCollectionEquality.unordered().equals(
+          other.userInfo,
+          userInfo,
+        );
   }
 
   @override
-  int get hashCode => Object.hash(
-        code,
-        domain,
-        userInfo,
-      );
+  int get hashCode => Object.hash(code, domain, userInfo);
 }
 
 /// Dart wrapper around IAP Kit
@@ -205,7 +229,7 @@ class IKPaymentWrapper {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'productId': productId,
-      'productType': productType,
+      'productType': _productTypeToValue(productType),
       'developerPayload': developerPayload,
       'reservedInfo': reservedInfo,
       'promotionalOfferId': promotionalOfferId,
@@ -255,8 +279,13 @@ class IKPaymentWrapper {
   }
 
   @override
-  int get hashCode => Object.hash(productId, productType, developerPayload,
-      reservedInfo, promotionalOfferId);
+  int get hashCode => Object.hash(
+    productId,
+    productType,
+    developerPayload,
+    reservedInfo,
+    promotionalOfferId,
+  );
 
   @override
   String toString() => _$IKPaymentWrapperToJson(this).toString();

@@ -8,39 +8,44 @@ part of 'ik_product_wrapper.dart';
 
 IKProductResponseWrapper _$SkProductResponseWrapperFromJson(Map json) =>
     IKProductResponseWrapper(
-      products: (json['products'] as List<dynamic>?)
-              ?.map((e) => IKProductWrapper.fromJson(
-                  Map<String, dynamic>.from(e as Map)))
+      products:
+          (json['products'] as List<dynamic>?)
+              ?.map(
+                (e) => IKProductWrapper.fromJson(
+                  Map<String, dynamic>.from(e as Map),
+                ),
+              )
               .toList() ??
           [],
       invalidProductIdentifiers:
           (json['invalidProductIdentifiers'] as List<dynamic>?)
-                  ?.map((e) => e as String)
-                  .toList() ??
-              [],
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
     );
 
 IKProductSubscriptionPeriodWrapper _$IKProductSubscriptionPeriodWrapperFromJson(
-        Map json) =>
-    IKProductSubscriptionPeriodWrapper(
-      numberOfUnits: json['numberOfUnits'] as int? ?? 0,
-      unit: const IKSubscriptionPeriodUnitConverter()
-          .fromJson(json['unit'] as int?),
-    );
+  Map json,
+) => IKProductSubscriptionPeriodWrapper(
+  numberOfUnits: json['numberOfUnits'] as int? ?? 0,
+  unit: const IKSubscriptionPeriodUnitConverter().fromJson(
+    json['unit'] as int?,
+  ),
+);
 
 IKProductWrapper _$IKProductWrapperFromJson(Map json) => IKProductWrapper(
-      id: json['id'] as String? ?? '',
-      type: _$IKProductTypeFromInt(json['type'] as int? ?? 0),
-      name: json['name'] as String? ?? '',
-      description: json['description'] as String? ?? '',
-      localPrice: json['localPrice'] as String? ?? '',
-      microPrice: json['microPrice'] as int? ?? 0,
-      originalLocalPrice: json['originalLocalPrice'] as String? ?? '',
-      originalMicroPrice: json['originalMicroPrice'] as int? ?? 0,
-      currency: json['currency'] as String? ?? '',
-      status: _$IKProductStatusFromInt(json['status'] as int? ?? 0),
-      jsonRepresentation: json['jsonRepresentation'] as String?,
-    );
+  id: json['id'] as String? ?? '',
+  type: _$IKProductTypeFromInt(json['type'] as int? ?? 0),
+  name: json['name'] as String? ?? '',
+  description: json['description'] as String? ?? '',
+  localPrice: json['localPrice'] as String? ?? '',
+  microPrice: json['microPrice'] as int? ?? 0,
+  originalLocalPrice: json['originalLocalPrice'] as String? ?? '',
+  originalMicroPrice: json['originalMicroPrice'] as int? ?? 0,
+  currency: json['currency'] as String? ?? '',
+  status: _$IKProductStatusFromInt(json['status'] as int? ?? 0),
+  jsonRepresentation: json['jsonRepresentation'] as String?,
+);
 
 ProductType _$IKProductTypeFromInt(int type) {
   switch (type) {
@@ -48,8 +53,10 @@ ProductType _$IKProductTypeFromInt(int type) {
       return ProductType.CONSUMABLE;
     case 1:
       return ProductType.NONCONSUMABLE;
-    case 3:
+    case 2:
       return ProductType.AUTORENEWABLE;
+    case 3:
+      return ProductType.NONRENEWABLE;
     default:
       return ProductType.CONSUMABLE;
   }

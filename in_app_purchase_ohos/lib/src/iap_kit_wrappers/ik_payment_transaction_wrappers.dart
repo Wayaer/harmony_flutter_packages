@@ -5,21 +5,38 @@
 import 'package:flutter/foundation.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-import 'enum_converters.dart';
-import 'ik_payment_queue_wrapper.dart';
-import 'ik_product_wrapper.dart';
+import 'package:in_app_purchase_ohos/src/iap_kit_wrappers/enum_converters.dart';
+import 'package:in_app_purchase_ohos/src/iap_kit_wrappers/ik_payment_queue_wrapper.dart';
+import 'package:in_app_purchase_ohos/src/iap_kit_wrappers/ik_product_wrapper.dart';
 
 part 'ik_payment_transaction_wrappers.g.dart';
+
+int? _finishMapProductTypeValue(ProductType? productType) {
+  switch (productType) {
+    case ProductType.CONSUMABLE:
+      return 0;
+    case ProductType.NONCONSUMABLE:
+      return 1;
+    case ProductType.AUTORENEWABLE:
+      return 2;
+    case ProductType.NONRENEWABLE:
+      return 3;
+    case null:
+      return null;
+  }
+}
 
 /// Callback handlers for transaction status changes.
 abstract class IKTransactionObserverWrapper {
   /// Triggered when any transactions are updated.
-  void updatedTransactions(
-      {required List<IKPaymentTransactionWrapper> transactions});
+  void updatedTransactions({
+    required List<IKPaymentTransactionWrapper> transactions,
+  });
 
   /// Triggered when any transactions are removed from the payment queue.
-  void removedTransactions(
-      {required List<IKPaymentTransactionWrapper> transactions});
+  void removedTransactions({
+    required List<IKPaymentTransactionWrapper> transactions,
+  });
 }
 
 /// The state of a transaction.
@@ -158,15 +175,22 @@ class IKPaymentTransactionWrapper {
   }
 
   @override
-  int get hashCode => Object.hash(payment, transactionState,
-      originalTransaction, transactionTimeStamp, transactionIdentifier, error);
+  int get hashCode => Object.hash(
+    payment,
+    transactionState,
+    originalTransaction,
+    transactionTimeStamp,
+    transactionIdentifier,
+    error,
+  );
 
   @override
   String toString() => _$IKPaymentTransactionWrapperToJson(this).toString();
 
   /// The payload that is used to finish this transaction.
-  Map<String, String?> toFinishMap() => <String, String?>{
-        'transactionIdentifier': transactionIdentifier,
-        'productIdentifier': payment.productId,
-      };
+  Map<String, Object?> toFinishMap() => <String, Object?>{
+    'transactionIdentifier': transactionIdentifier,
+    'productIdentifier': payment.productId,
+    'productType': _finishMapProductTypeValue(payment.productType),
+  };
 }

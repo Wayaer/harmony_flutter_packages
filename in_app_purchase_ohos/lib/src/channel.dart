@@ -5,5 +5,6 @@
 import 'package:flutter/services.dart';
 
 /// Method channel for the plugin's platform<-->Dart calls.
-const MethodChannel channel =
-    MethodChannel('plugins.flutter.io/in_app_purchase');
+const MethodChannel channel = MethodChannel(
+  'plugins.flutter.io/in_app_purchase',
+);
