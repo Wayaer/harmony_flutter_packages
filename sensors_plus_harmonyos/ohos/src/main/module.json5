@@ -6,11 +6,6 @@
       "default",
       "tablet",
       "2in1"
-    ],
-    "requestPermissions": [
-      {
-        "name": "ohos.permission.ACCELEROMETER"
-      }
     ]
   }
 }

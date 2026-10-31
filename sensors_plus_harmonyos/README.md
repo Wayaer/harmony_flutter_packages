@@ -1,42 +1,33 @@
-<p align="center">
-  <h1 align="center"> <code>sensors_plus_harmonyos</code> </h1>
-</p>
+# sensors_plus_harmonyos
 
-## 1. 安装与使用
+`sensors_plus` 的鸿蒙（OpenHarmony / HarmonyOS）平台实现，兼容 Flutter 插件 `sensors_plus 7.1.1`。
 
-### 1.1 安装方式
-
-进入到工程目录并在 pubspec.yaml 中添加以下依赖：
-
-<!-- tabs:start -->
-
-#### pubspec.yaml
+## 安装与使用
 
 ```yaml
-...
-
 dependencies:
-  sensors_plus: ^6.1.2
-  sensors_plus_harmonyos: ^0.0.1
-...
+  sensors_plus: ^7.1.1
+  sensors_plus_harmonyos: ^7.1.1
 ```
 
-执行命令
+```dart
+import 'package:sensors_plus/sensors_plus.dart';
 
-```bash
-flutter pub get
+accelerometerEventStream().listen((AccelerometerEvent event) {
+  print('${event.x}, ${event.y}, ${event.z}');
+});
+
+gyroscopeEventStream().listen((GyroscopeEvent event) {});
+magnetometerEventStream().listen((MagnetometerEvent event) {});
 ```
 
-<!-- tabs:end -->
+## 鸿蒙平台限制
 
-### 1.2 使用案例
+- 设备不支持某类传感器时，订阅会触发错误回调。
+- 实际采样频率受系统调度与硬件能力影响，`samplingPeriod` 只是期望值。
+- 后台采集需要业务自行申请长时任务，否则会被系统暂停。
 
-使用案例详见 [sensors_plus_harmonyos](./example)
+## 兼容版本
 
-## 2. 约束与限制
-
-### 2.1 兼容性
-
-在以下版本中已测试通过
-
-1. Flutter: 3.27.4-dev; SDK: 5.0.0(12); IDE: DevEco Studio: 5.0.13.200; ROM: 5.1.0.120 SP3;
+- 对应上游 Flutter 插件版本：`sensors_plus 7.1.1`
+- 平台接口依赖：`sensors_plus_platform_interface: ^2.0.2`
