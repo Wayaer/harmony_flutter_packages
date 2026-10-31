@@ -2,13 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE_ODID file.
 
-/**
- * Play constants for all features.
- */
 export class PlayConstants {
-  /**
-   * Playback page constant.
-   */
   static readonly PLAY_SPEED: number = 1;
   static readonly VOLUME: number = 0.5;
   static readonly VOLUME_SHOW: boolean = true;
@@ -28,9 +22,6 @@ export class PlayConstants {
   static readonly MAX_VALUE: number = 1;
   static readonly DISAPPEAR_TIME: number = 200;
   static readonly MARGIN_ZERO: string = '0';
-  /**
-   * Playback Page Header Constant.
-   */
   static readonly DX: number = 0;
   static readonly DY: number = -20;
   static readonly GRID_COUNT: number = 4;
@@ -43,9 +34,6 @@ export class PlayConstants {
   static readonly POPUP_COLUMN_WIDTH: string = '43.3%';
   static readonly POPUP_COLUMN_HEIGHT: string = '13.5%';
   static readonly POPUP_CLOSE_TIME: number = 500;
-  /**
-   * Constants for setting the playback speed.
-   */
   static readonly TITLE_DIALOG_ROW_HEIGHT: string = '25%';
   static readonly TITLE_DIALOG_ROW_WIDTH: string = '86.6%';
   static readonly TITLE_DIALOG_COLUMNS_TEMPLATE: string = '1fr 1fr 1fr';
@@ -53,9 +41,6 @@ export class PlayConstants {
   static readonly TITLE_DIALOG_COLUMNS_GAP: number = 10;
   static readonly TITLE_DIALOG_ROWS_GAP: number = 10;
   static readonly TITLE_DIALOG_COLUMN_WIDTH: string = '39.2%';
-  /**
-   * Video playback constant.
-   */
   static readonly PLAYER_ID: string = '';
   static readonly PLAYER_TYPE: string = 'surface';
   static readonly PLAYER_LIBRARY_NAME: string = '';
@@ -66,17 +51,11 @@ export class PlayConstants {
   static readonly PLAYER_FIRST: number = 0;
   static readonly PLAYER_NEXT: number = 1;
   static readonly PLAYER_DURATION: number = 0;
-  /**
-   * Video playback control constant.
-   */
   static readonly CONTROL_ROW_WIDTH: string = '68.8%';
   static readonly CONTROL_PLAY_START: number = 1;
   static readonly CONTROL_PLAY_PAUSE: number = 2;
   static readonly CONTROL_NEXT: number = 1;
   static readonly CONTROL_FIRST: number = 0;
-  /**
-   * Progress bar page constant.
-   */
   static readonly PROGRESS_CURRENT_TIME: string = '00:00';
   static readonly PROGRESS_TOTAL_TIME: string = '00:00';
   static readonly PROGRESS_PROGRESS_VAL: number = 0;
@@ -87,8 +66,5 @@ export class PlayConstants {
   static readonly PROGRESS_MARGIN_LEFT: string = '2.2%';
   static readonly PROGRESS_SEEK_TIME: number = 0;
   static readonly PROGRESS_ROW_WIDTH: string = '93.4%';
-  /**
-   * Network video playback error notification duration
-   */
   static readonly PLAY_ERROR_TIME: number = 3000;
 }

@@ -1,7 +1,7 @@
-// Copyright (c) 2025 Huawei Device Co., Ltd.
+// Copyright (c) 2025 Hunan OpenValley Digital Industry Development Co., Ltd.
 // Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE_HW file.
-// Based on Camera.java originally written by
+// found in the LICENSE_ODID file.
+// Based on VideoPlayerPlugin.java originally written by
 // Copyright 2013 The Flutter Authors.
 
 import { MethodCall, MethodCallHandler, MethodChannel, MethodResult } from '@ohos/flutter_ohos';
@@ -17,7 +17,6 @@ import fs from '@ohos.file.fs';
 
 const TAG: string = "VideoPlayerPlugin";
 
-// 将 FlutterState 类移到顶部定义
 export class FlutterState {
   private binaryMessenger: BinaryMessenger;
   private textureRegistry: TextureRegistry;
@@ -87,7 +86,6 @@ export class VideoPlayerPlugin implements FlutterPlugin, AbilityAware, MethodCal
     this.disposeAll();
   }
 
-  // 添加资源释放的通用方法
   private disposeAll(): void {
     if (this.videoPlayerApiImpl != null) {
       this.videoPlayerApiImpl.disposeAllPlayers();

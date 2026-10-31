@@ -1,3 +1,3 @@
-import { VideoPlayerPlugin } from './src/main/ets/VideoPlayerPlugin'
+import { VideoPlayerPlugin } from './src/main/ets/plugin/VideoPlayerPlugin'
 
 export default VideoPlayerPlugin

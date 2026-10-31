@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE_ODID file.
 
-import { CommonConstants } from './constants/CommonConstants';
-import { PlayConstants } from './constants/PlayConstants';
+import { CommonConstants } from './CommonConstants';
+import { PlayConstants } from './PlayConstants';
 
 
 @Observed

@@ -1,7 +1,7 @@
-// Copyright (c) 2025 Huawei Device Co., Ltd.
+// Copyright (c) 2025 Hunan OpenValley Digital Industry Development Co., Ltd.
 // Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE_HW file.
-// Based on Camera.java originally written by
+// found in the LICENSE_ODID file.
+// Based on Messages.java originally written by
 // Copyright 2013 The Flutter Authors.
 
 import StandardMessageCodec from '@ohos/flutter_ohos/src/main/ets/plugin/common/StandardMessageCodec';
@@ -12,18 +12,13 @@ import {VideoPlayerApiCodec} from './VideoPlayerApiCodec.ets'
 import { ByteBuffer } from '@ohos/flutter_ohos/src/main/ets/util/ByteBuffer';
 
 
-/** Error class for passing custom error details to Flutter via a thrown PlatformException. */
 export class FlutterError implements Error {
 
-  /** The error code. */
   public code: string;
 
-  /** The error name. */
   public name: string;
 
-  /** The error message. */
   public message: string;
-  /** The error stack. */
   public stack?: string;
 
   constructor(code: string, name: string,  message: string, stack: string) 
@@ -50,13 +45,11 @@ export function wrapError(error: Error): Array<Object> {
   return errorList;
 }
 
-/* Pigeon equivalent of VideoViewType.*/
 export enum PlatformVideoViewType {
   TEXTURE_VIEW,
   PLATFORM_VIEW
 }
 
-/* Generated class from Pigeon that represents data sent in messages.*/
 export class CreateMessage {
   private asset: string="";
 
@@ -106,7 +99,6 @@ export class CreateMessage {
 
   public setHttpHeaders(setterArg: Map<String, String>): void {
     if (setterArg == null) {
-      // throw new IllegalStateException("Nonnull field \"httpHeaders\" is null.");
     }
     this.httpHeaders = setterArg;
   }
@@ -144,7 +136,6 @@ export class CreateMessage {
   }
 }
 
-/* Generated abstract class from Pigeon that represents a handler of messages from Flutter.*/
 export abstract class OhosVideoPlayerApi {
 
   abstract initialize(): void;
@@ -169,12 +160,10 @@ export abstract class OhosVideoPlayerApi {
 
   abstract setMixWithOthers(mixWithOthers: boolean ): void;
 
-  /** The codec used by OhosVideoPlayerApi. */
   static getCodec(): MessageCodec<Object>{
     return VideoPlayerApiCodec.INSTANCE;
   }
 
-  /*Sets up an instance of `OhosVideoPlayerApi` to handle messages through the `binaryMessenger`.*/
   static setup(binaryMessenger: BinaryMessenger, api: OhosVideoPlayerApi | null): void {
     {
       let channel: BasicMessageChannel<Object> =
@@ -204,17 +193,15 @@ export abstract class OhosVideoPlayerApi {
               binaryMessenger, "dev.flutter.pigeon.video_player_ohos.OhosVideoPlayerApi.create", OhosVideoPlayerApi.getCodec());
       if (api != null) {
         channel.setMessageHandler({
-            onMessage(message: Object ,reply: Reply<Object> ) {
+            async onMessage(message: Object ,reply: Reply<Object> ) {
               let args: Array<Object> = message as Array<Object>;
               let res: Array<Object> = [];
               try {
-                api!.create(args[0] as CreateMessage).catch((result:number)=>{
-                  let output: number = result;
-                  res.push(output);
-                });
+                let output: number = await api!.create(args[0] as CreateMessage);
+                res.push(output);
               }
  catch (error) {
-                let wrappedError: Array<Object> = wrapError(error);
+                let wrappedError: Array<Object> = wrapError(error as Error);
                 res = wrappedError;
               }
               reply.reply(res);

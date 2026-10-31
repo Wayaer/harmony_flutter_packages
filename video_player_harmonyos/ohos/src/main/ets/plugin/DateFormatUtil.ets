@@ -1,12 +1,6 @@
-import { CommonConstants } from '../constants/CommonConstants';
+import { CommonConstants } from './CommonConstants';
 
 class DateFormatUtil {
-  /**
-   * Seconds converted to HH:mm:ss.
-   *
-   * @param seconds Maximum video duration (seconds).
-   * @return Time after conversion.
-   */
   secondToTime(seconds: number): string {
     let hourUnit = CommonConstants.TIME_UNIT * CommonConstants.TIME_UNIT;
     let hour = Math.floor(seconds / hourUnit);
@@ -23,12 +17,6 @@ class DateFormatUtil {
     }
   }
 
-  /**
-   * Zero padding, 2 bits.
-   *
-   * @param num Number to be converted.
-   * @return Result after zero padding.
-   */
   padding(num: string): string {
     let length = CommonConstants.PADDING_LENGTH;
     for (let len = (num.toString()).length; len < length; len = num.length) {

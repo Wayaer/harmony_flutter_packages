@@ -3,16 +3,14 @@ description: "Demonstrates how to use the video_player_harmonyos plugin."
 publish_to: 'none'
 
 environment:
-  sdk: ^3.6.2
+  sdk: ^3.12.0
+  flutter: ">=3.44.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  path_provider: ^2.1.5
-  path_provider_harmonyos: ^0.0.1
-  video_player: ^2.10.0
-  video_player_harmonyos:
-    path: ../
+  video_player: ^2.14.1
+  video_player_harmonyos: ^2.14.1
 
 dev_dependencies:
   flutter_lints: ^5.0.0

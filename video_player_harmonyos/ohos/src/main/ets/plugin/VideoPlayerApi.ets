@@ -1,8 +1,7 @@
-// Copyright (c) 2025 Huawei Device Co., Ltd.
+// Copyright (c) 2025 Hunan OpenValley Digital Industry Development Co., Ltd.
 // Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE_HW file.
-// Based on Camera.java originally written by
-// Copyright 2013 The Flutter Authors.
+// found in the LICENSE_ODID file.
+
 
 import { BinaryMessenger } from '@ohos/flutter_ohos/src/main/ets/plugin/common/BinaryMessenger';
 import { CreateMessage } from './Messages';
@@ -30,6 +29,18 @@ export interface VideoPlayerApi {
   pause(playerId: number): void;
 
   setMixWithOthers(mixWithOthers: boolean): void;
+
+  getAudioTracks(playerId: number): Promise<Array<Map<string, string | number | boolean | null>>>;
+
+  selectAudioTrack(playerId: number, groupIndex: number, trackIndex: number): Promise<void>;
+
+  getVideoTracks(playerId: number): Promise<Array<Map<string, string | number | boolean | null>>>;
+
+  selectVideoTrack(playerId: number, groupIndex: number, trackIndex: number): Promise<void>;
+
+  setPreventsDisplaySleepDuringVideoPlayback(playerId: number, preventsDisplaySleep: boolean): void;
+
+  setAllowBackgroundPlayback(allowBackgroundPlayback: boolean): void;
 
   setup(binaryMessenger: BinaryMessenger): void;
 }

@@ -1,16 +1,23 @@
 name: video_player_harmonyos
-description: "HarmonyOS implementation of the video_player plugin."
-version: 0.0.1
+description: "HarmonyOS (OpenHarmony) platform implementation of the video_player Flutter plugin."
+version: 2.14.1
 repository: https://github.com/Wayaer/harmony_flutter_packages/tree/main/video_player_harmonyos
+issue_tracker: https://github.com/Wayaer/harmony_flutter_packages/issues
+topics:
+  - flutter
+  - harmonyos
+  - ohos
+  - video
+  - player
 
 environment:
-  sdk: '>=3.6.2 <4.0.0'
-  flutter: '>=3.27.0'
+  sdk: ^3.12.0
+  flutter: ">=3.44.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  video_player_platform_interface: ^6.4.0
+  video_player_platform_interface: ^6.9.0
 
 dev_dependencies:
   flutter_lints: ^5.0.0
@@ -21,4 +28,4 @@ flutter:
     platforms:
       ohos:
         pluginClass: VideoPlayerPlugin
-        dartPluginClass: VideoPlayerHarmonyOS
+        dartPluginClass: VideoPlayerOhos

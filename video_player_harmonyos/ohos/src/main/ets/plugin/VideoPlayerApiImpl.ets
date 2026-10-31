@@ -1,8 +1,6 @@
-// Copyright (c) 2025 Huawei Device Co., Ltd.
+// Copyright (c) 2025 Hunan OpenValley Digital Industry Development Co., Ltd.
 // Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE_HW file.
-// Based on Camera.java originally written by
-// Copyright 2013 The Flutter Authors.
+// found in the LICENSE_ODID file.
 
 import { FlutterPlugin, FlutterPluginBinding} from '@ohos/flutter_ohos/src/main/ets/embedding/engine/plugins/FlutterPlugin';
 import { AbilityPluginBinding } from '@ohos/flutter_ohos/src/main/ets/embedding/engine/plugins/ability/AbilityPluginBinding';
@@ -13,7 +11,7 @@ import { FlutterRenderer } from '@ohos/flutter_ohos/src/main/ets/embedding/engin
 import { SurfaceTextureEntry } from '@ohos/flutter_ohos/src/main/ets/view/TextureRegistry';
 import { VideoPlayer } from './VideoPlayer';
 import { VideoPlayerApi } from './VideoPlayerApi';
-import { CommonConstants } from './constants/CommonConstants';
+import { CommonConstants } from './CommonConstants';
 import { CreateMessage,wrapError,OhosVideoPlayerApi,PlatformVideoViewType } from './Messages';
 import { PlayerModel } from './PlayerModel';
 import HashMap from '@ohos.util.HashMap';
@@ -23,19 +21,44 @@ import resourceManager from '@ohos.resourceManager';
 import common from '@ohos.app.ability.common';
 import { media } from '@kit.MediaKit';
 import { EventChannel } from '@ohos/flutter_ohos';
-import { GlobalContext } from './util/GlobalContext';
+import { GlobalContext } from './GlobalContext';
 import { window } from '@kit.ArkUI';
 import { image } from '@kit.ImageKit';
+import fs from '@ohos.file.fs';
 
 const TAG: string = "VideoPlayerApiImpl";
 const BLACK_COLOR = 0xFF000000;
 
+function mapPlaybackSpeed(speed: number): media.PlaybackSpeed {
+  if (speed > 0 && speed <= 0.125) {
+    return media.PlaybackSpeed.SPEED_FORWARD_0_125_X;
+  } else if (speed > 0.125 && speed <= 0.4) {
+    return media.PlaybackSpeed.SPEED_FORWARD_0_25_X;
+  } else if (speed > 0.4 && speed <= 0.6) {
+    return media.PlaybackSpeed.SPEED_FORWARD_0_50_X;
+  } else if (speed > 0.6 && speed <= 0.8) {
+    return media.PlaybackSpeed.SPEED_FORWARD_0_75_X;
+  } else if (speed > 0.8 && speed <= 1.1) {
+    return media.PlaybackSpeed.SPEED_FORWARD_1_00_X;
+  } else if (speed > 1.1 && speed <= 1.4) {
+    return media.PlaybackSpeed.SPEED_FORWARD_1_25_X;
+  } else if (speed > 1.4 && speed <= 1.6) {
+    return media.PlaybackSpeed.SPEED_FORWARD_1_50_X;
+  } else if (speed > 1.6 && speed <= 1.8) {
+    return media.PlaybackSpeed.SPEED_FORWARD_1_75_X;
+  } else if (speed > 1.8 && speed <= 2.0) {
+    return media.PlaybackSpeed.SPEED_FORWARD_2_00_X;
+  } else if (speed > 2.0) {
+    return media.PlaybackSpeed.SPEED_FORWARD_3_00_X;
+  }
+  return media.PlaybackSpeed.SPEED_FORWARD_1_00_X;
+}
+
 export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
   private videoPlayers: HashMap<number, VideoPlayer> = new HashMap<number, VideoPlayer>();
-  private nextPlayerId: number = 1;
   private flutterState: FlutterState | null = null;
   private binding: AbilityPluginBinding | null = null;
-  private audioFocus: Boolean = false;
+  private audioFocus: boolean = false;
   private pixelMaps: HashMap<string, image.PixelMap> = new HashMap();
 
   constructor(flutterState: FlutterState | null, binding: AbilityPluginBinding | null) {
@@ -47,10 +70,7 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
   disposeAllPlayers(): void {
     this.videoPlayers.forEach(videoPlayer => videoPlayer?.release());
     this.videoPlayers.clear();
-  }
-
-  private getNextPlayerId(): number {
-    return this.nextPlayerId++;
+    this.pixelMapRelease();
   }
 
   initialize(): void {
@@ -99,57 +119,60 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
       }
       header[key.toString()] = value.toString();
     })
-    let playerId: number = this.getNextPlayerId(); 
     let textureId: number = flutterRenderer.getTextureId();
+    let playerId: number = textureId;
     Log.i(TAG, "enter getRawFd, textureId=" + textureId);
     let surfaceTextureEntry: SurfaceTextureEntry = flutterRenderer.registerTexture(textureId);
-    let windowProperties = windowClass.getWindowProperties();
-    const width = windowProperties.windowRect.width;
-    const height = windowProperties.windowRect.height;
-    flutterRenderer.setTextureBackGroundPixelMap(textureId, await this.createBlackPixelMap(width, height));
-    if (asset != null) {
-      Log.i(TAG, "asset create called, asset is" + asset);
-      let avMetaExtractor = await media.createAVMetadataExtractor();
-      avMetaExtractor.fdSrc = await this.getContext().resourceManager.getRawFd("flutter_assets/" + asset);
-      let mateData = await avMetaExtractor.fetchMetadata();
-      if (mateData.hasVideo == CommonConstants.YES) {
-        let avImageGenerator = await media.createAVImageGenerator();
-        Log.i(TAG, "asset video create");
-        avImageGenerator.fdSrc = await this.getContext().resourceManager.getRawFd("flutter_assets/" + asset);
-        let pixelMap = await avImageGenerator.fetchFrameByTime(0, media.AVImageQueryOptions.AV_IMAGE_QUERY_NEXT_SYNC, {
-          width: -1,
-          height: -1
-        });
-        this.pixelMaps.set(JSON.stringify(arg), pixelMap);
-        avImageGenerator.release();
-        flutterRenderer.setTextureBackGroundPixelMap(textureId, this.pixelMaps.get(JSON.stringify(arg)));
-      }
-      avMetaExtractor.release();
-    } else if (uri != null && uri.startsWith("fd://")) {
-      Log.i(TAG, "local create called, file is" + uri);
-      let avMetaExtractor = await media.createAVMetadataExtractor();
-      avMetaExtractor.fdSrc = {
-        fd: Number.parseInt(uri.replace("fd://", ""))
-      };
-      let mateData = await avMetaExtractor.fetchMetadata();
-      if (mateData.hasVideo == CommonConstants.YES) {
-        let avImageGenerator = await media.createAVImageGenerator();
-        Log.i(TAG, "local video create");
-        avImageGenerator.fdSrc = {
+    let videoPlayer: VideoPlayer | null = null;
+    try {
+      let windowProperties = windowClass.getWindowProperties();
+      const width = windowProperties.windowRect.width;
+      const height = windowProperties.windowRect.height;
+      const blackPixelMap = await this.createBlackPixelMap(width, height);
+      flutterRenderer.setTextureBackGroundPixelMap(textureId, blackPixelMap);
+      this.recordPixelMap(textureId, blackPixelMap);
+      if (asset != null) {
+        Log.i(TAG, "asset create called, asset is" + asset);
+        let avMetaExtractor = await media.createAVMetadataExtractor();
+        avMetaExtractor.fdSrc = await this.getContext().resourceManager.getRawFd("flutter_assets/" + asset);
+        let mateData = await avMetaExtractor.fetchMetadata();
+        if (mateData.hasVideo == CommonConstants.YES) {
+          let avImageGenerator = await media.createAVImageGenerator();
+          Log.i(TAG, "asset video create");
+          avImageGenerator.fdSrc = await this.getContext().resourceManager.getRawFd("flutter_assets/" + asset);
+          let pixelMap = await avImageGenerator.fetchFrameByTime(0, media.AVImageQueryOptions.AV_IMAGE_QUERY_NEXT_SYNC, {
+            width: -1,
+            height: -1
+          });
+          avImageGenerator.release();
+          flutterRenderer.setTextureBackGroundPixelMap(textureId, pixelMap);
+          this.recordPixelMap(textureId, pixelMap);
+        }
+        avMetaExtractor.release();
+      } else if (uri != null && uri.startsWith("fd://")) {
+        Log.i(TAG, "local create called, file is" + uri);
+        let avMetaExtractor = await media.createAVMetadataExtractor();
+        avMetaExtractor.fdSrc = {
           fd: Number.parseInt(uri.replace("fd://", ""))
         };
-        let pixelMap = await avImageGenerator.fetchFrameByTime(0, media.AVImageQueryOptions.AV_IMAGE_QUERY_NEXT_SYNC, {
-          width: -1,
-          height: -1
-        });
-        this.pixelMaps.set(JSON.stringify(arg), pixelMap);
-        avImageGenerator.release();
-        flutterRenderer.setTextureBackGroundPixelMap(textureId, this.pixelMaps.get(JSON.stringify(arg)));
+        let mateData = await avMetaExtractor.fetchMetadata();
+        if (mateData.hasVideo == CommonConstants.YES) {
+          let avImageGenerator = await media.createAVImageGenerator();
+          Log.i(TAG, "local video create");
+          avImageGenerator.fdSrc = {
+            fd: Number.parseInt(uri.replace("fd://", ""))
+          };
+          let pixelMap = await avImageGenerator.fetchFrameByTime(0, media.AVImageQueryOptions.AV_IMAGE_QUERY_NEXT_SYNC, {
+            width: -1,
+            height: -1
+          });
+          avImageGenerator.release();
+          flutterRenderer.setTextureBackGroundPixelMap(textureId, pixelMap);
+          this.recordPixelMap(textureId, pixelMap);
+        }
+        avMetaExtractor.release();
       }
-      avMetaExtractor.release();
-    }
-    let eventChannel: EventChannel = new EventChannel(this.flutterState.getBinaryMessenger(), "flutter.io/videoPlayer/videoEvents" + textureId.toString());
-    let videoPlayer: VideoPlayer;
+      let eventChannel: EventChannel = new EventChannel(this.flutterState.getBinaryMessenger(), "flutter.io/videoPlayer/videoEvents" + textureId.toString());
       if (asset != null) {
         let rawFileDescriptor: resourceManager.RawFileDescriptor = await this.getContext().resourceManager.getRawFd("flutter_assets/" + asset);
         videoPlayer = new VideoPlayer(playerModel, surfaceTextureEntry, rawFileDescriptor, null, eventChannel, this.audioFocus, null);
@@ -158,11 +181,50 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
       } else {
         throw new Error("Invalid video source");
       }
+      if (videoPlayer == null) {
+        throw new Error("Invalid video source");
+      }
       await videoPlayer.createAVPlayer();
       this.videoPlayers.set(playerId, videoPlayer);
-      
+
       Log.i(TAG, `The player was created successfully,ID: ${playerId}`);
       return playerId;
+    } catch (err) {
+      if (videoPlayer != null) {
+        await videoPlayer.release();
+      } else if (uri != null && uri.startsWith("fd://")) {
+        try {
+          fs.closeSync(Number.parseInt(uri.replace("fd://", "")));
+        } catch (e) {
+          Log.e(TAG, 'close fd failed: ' + JSON.stringify(e));
+        }
+      }
+      flutterRenderer.unregisterTexture(textureId);
+      const pixelMap = this.pixelMaps.get(textureId.toString());
+      if (pixelMap) {
+        pixelMap.release();
+        this.pixelMaps.remove(textureId.toString());
+      }
+      throw new Error('create video player failed: ' + JSON.stringify(err));
+    }
+  }
+
+  private recordPixelMap(textureId: number, pixelMap: image.PixelMap): void {
+    const key = textureId.toString();
+    const previous = this.pixelMaps.get(key);
+    this.pixelMaps.set(key, pixelMap);
+    if (previous) {
+      previous.release();
+    }
+  }
+
+  pixelMapRelease(){
+    for (let pixelMap of this.pixelMaps.values()) {
+      if (pixelMap && typeof pixelMap.release === 'function') {
+        pixelMap.release();
+      }
+    }
+    this.pixelMaps.clear();
   }
 
   dispose(playerId:number): void {
@@ -173,6 +235,11 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
         this.flutterState.getTextureRegistry().unregisterTexture(playerId);
       }
       this.videoPlayers.remove(playerId);
+      const pixelMap = this.pixelMaps.get(playerId.toString());
+      if (pixelMap) {
+        pixelMap.release();
+        this.pixelMaps.remove(playerId.toString());
+      }
       Log.i(TAG, `Release player resources: ${playerId}`);
     } else {
       Log.w(TAG, `Try to release an non-existent player: ${playerId}`);
@@ -204,13 +271,19 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
   setPlaybackSpeed(playerId: number, speed: number) {
     const videoPlayer = this.videoPlayers.get(playerId);
     Log.d(TAG, "setPlaybackSpeed, id=" + playerId + ", videoPlayer=" + videoPlayer);
-   if (videoPlayer) {
-      videoPlayer.setSpeed(speed);
+    if (videoPlayer) {
+      const enumSpeed = mapPlaybackSpeed(speed);
+      if (enumSpeed === null) {
+        Log.w(TAG, `Unsupported playback speed, id=${playerId}, Speed=${speed}`);
+        videoPlayer.setSpeed(speed);
+        return;
+      }
+      videoPlayer.setSpeed(enumSpeed);
       Log.d(TAG, `Set up the player: ${playerId} speed: ${speed}`);
     } else {
       Log.w(TAG, `The player does not exist: ${playerId}`);
-    }
   }
+}
 
   play(playerId: number) {
     const videoPlayer = this.videoPlayers.get(playerId);
@@ -232,7 +305,7 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
       return position;
     }
     Log.w(TAG, `The player does not exist: ${playerId}`);
-    return 0;
+    throw new Error(`VideoError: No player found with playerId <${playerId}>`);
   }
 
   seekTo(playerId: number, position: number) {
@@ -265,10 +338,75 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
     });
   }
 
+  async getAudioTracks(playerId: number): Promise<Array<Map<string, string | number | boolean | null>>> {
+    if (playerId < 0) {
+      return [];
+    }
+    const videoPlayer = this.videoPlayers.get(playerId);
+    if (videoPlayer) {
+      return await videoPlayer.getAudioTracks();
+    }
+    Log.w(TAG, `The player does not exist: ${playerId}`);
+    return [];
+  }
+
+  async selectAudioTrack(playerId: number, groupIndex: number, trackIndex: number): Promise<void> {
+    if (playerId < 0) {
+      return;
+    }
+    const videoPlayer = this.videoPlayers.get(playerId);
+    if (videoPlayer) {
+      await videoPlayer.selectAudioTrack(groupIndex, trackIndex);
+      return;
+    }
+    Log.w(TAG, `The player does not exist: ${playerId}`);
+  }
+
+  async getVideoTracks(playerId: number): Promise<Array<Map<string, string | number | boolean | null>>> {
+    if (playerId < 0) {
+      return [];
+    }
+    const videoPlayer = this.videoPlayers.get(playerId);
+    if (videoPlayer) {
+      return await videoPlayer.getVideoTracks();
+    }
+    Log.w(TAG, `The player does not exist: ${playerId}`);
+    return [];
+  }
+
+  async selectVideoTrack(playerId: number, groupIndex: number, trackIndex: number): Promise<void> {
+    if (playerId < 0) {
+      return;
+    }
+    const videoPlayer = this.videoPlayers.get(playerId);
+    if (videoPlayer) {
+      await videoPlayer.selectVideoTrack(groupIndex, trackIndex);
+      return;
+    }
+    Log.w(TAG, `The player does not exist: ${playerId}`);
+  }
+
+  setPreventsDisplaySleepDuringVideoPlayback(playerId: number, preventsDisplaySleep: boolean): void {
+    const videoPlayer = this.videoPlayers.get(playerId);
+    if (videoPlayer) {
+      videoPlayer.setPreventsDisplaySleep(preventsDisplaySleep);
+      return;
+    }
+    this.videoPlayers.forEach((player: VideoPlayer) => {
+      player.setPreventsDisplaySleep(preventsDisplaySleep);
+    });
+  }
+
+  setAllowBackgroundPlayback(allowBackgroundPlayback: boolean): void {
+    Log.d(TAG, "setAllowBackgroundPlayback: " + allowBackgroundPlayback);
+    this.videoPlayers.forEach((player: VideoPlayer) => {
+      player.setAllowBackgroundPlayback(allowBackgroundPlayback);
+    });
+  }
+
   setup(binaryMessenger: BinaryMessenger): void {
     Log.i(TAG, "设置消息通道处理程序");
     
-    // 为每个方法设置消息通道
     this.setupInitializeChannel(binaryMessenger);
     this.setupCreateChannel(binaryMessenger);
     this.setupDisposeChannel(binaryMessenger);
@@ -280,21 +418,25 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
     this.setupSeekToChannel(binaryMessenger);
     this.setupPauseChannel(binaryMessenger);
     this.setupSetMixWithOthersChannel(binaryMessenger);
+    this.setupGetAudioTracksChannel(binaryMessenger);
+    this.setupSelectAudioTrackChannel(binaryMessenger);
+    this.setupGetVideoTracksChannel(binaryMessenger);
+    this.setupSelectVideoTrackChannel(binaryMessenger);
+    this.setupSetPreventsDisplaySleepChannel(binaryMessenger);
+    this.setupSetAllowBackgroundPlaybackChannel(binaryMessenger);
   }
 
-  // 初始化通道设置
   private setupInitializeChannel(binaryMessenger: BinaryMessenger): void {
     const channel: BasicMessageChannel<Object> = new BasicMessageChannel<Object>(
       binaryMessenger, 
       "dev.flutter.pigeon.video_player_ohos.OhosVideoPlayerApi.initialize", 
-      OhosVideoPlayerApi.getCodec() // 使用抽象类的编解码器
+      OhosVideoPlayerApi.getCodec()
     );
     
     channel.setMessageHandler({
       onMessage: (msg: Object, reply: Reply<Object>): void => {
         try {
           this.initialize();
-          // 返回空数组表示成功，无返回值
           reply.reply([]);
         } catch (err) {
           reply.reply(wrapError(err));
@@ -303,7 +445,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
     });
   }
 
-  // 创建通道设置
   private setupCreateChannel(binaryMessenger: BinaryMessenger): void {
     const channel: BasicMessageChannel<Object> = new BasicMessageChannel<Object>(
       binaryMessenger, 
@@ -318,7 +459,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
         
         try {
           this.create(createMsg).then((playerId: number) => {
-            // 返回包含playerId的数组
             reply.reply([playerId]);
           }).catch((err:Error) => {
             reply.reply(wrapError(err));
@@ -330,7 +470,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
     });
   }
 
-  // 释放通道设置
   private setupDisposeChannel(binaryMessenger: BinaryMessenger): void {
     const channel: BasicMessageChannel<Object> = new BasicMessageChannel<Object>(
       binaryMessenger, 
@@ -345,7 +484,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
         
         try {
           this.dispose(playerId);
-          // 返回空数组表示成功
           reply.reply([]);
         } catch (err) {
           reply.reply(wrapError(err));
@@ -354,7 +492,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
     });
   }
 
-  // 设置循环播放通道
   private setupSetLoopingChannel(binaryMessenger: BinaryMessenger): void {
     const channel: BasicMessageChannel<Object> = new BasicMessageChannel<Object>(
       binaryMessenger, 
@@ -370,7 +507,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
         
         try {
           this.setLooping(playerId, looping);
-          // 返回空数组表示成功
           reply.reply([]);
         } catch (err) {
           reply.reply(wrapError(err));
@@ -379,7 +515,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
     });
   }
   
-  // 设置音量通道
   private setupSetVolumeChannel(binaryMessenger: BinaryMessenger): void {
     const channel: BasicMessageChannel<Object> = new BasicMessageChannel<Object>(
       binaryMessenger, 
@@ -395,7 +530,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
         
         try {
           this.setVolume(playerId, volume);
-          // 返回空数组表示成功
           reply.reply([]);
         } catch (err) {
           reply.reply(wrapError(err));
@@ -404,7 +538,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
     });
   }
   
-  // 设置播放速度通道
   private setupSetPlaybackSpeedChannel(binaryMessenger: BinaryMessenger): void {
     const channel: BasicMessageChannel<Object> = new BasicMessageChannel<Object>(
       binaryMessenger, 
@@ -420,7 +553,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
         
         try {
           this.setPlaybackSpeed(playerId, speed);
-          // 返回空数组表示成功
           reply.reply([]);
         } catch (err) {
           reply.reply(wrapError(err));
@@ -429,7 +561,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
     });
   }
   
-  // 播放通道
   private setupPlayChannel(binaryMessenger: BinaryMessenger): void {
     const channel: BasicMessageChannel<Object> = new BasicMessageChannel<Object>(
       binaryMessenger, 
@@ -444,7 +575,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
         
         try {
           this.play(playerId);
-          // 返回空数组表示成功
           reply.reply([]);
         } catch (err) {
           reply.reply(wrapError(err));
@@ -453,7 +583,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
     });
   }
   
-  // 获取位置通道
   private setupPositionChannel(binaryMessenger: BinaryMessenger): void {
     const channel: BasicMessageChannel<Object> = new BasicMessageChannel<Object>(
       binaryMessenger, 
@@ -468,7 +597,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
         
         try {
           let position = this.position(playerId);
-          // 返回包含位置的数组
           reply.reply([position]);
         } catch (err) {
           reply.reply(wrapError(err));
@@ -477,7 +605,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
     });
   }
   
-  // 跳转通道
   private setupSeekToChannel(binaryMessenger: BinaryMessenger): void {
     const channel: BasicMessageChannel<Object> = new BasicMessageChannel<Object>(
       binaryMessenger, 
@@ -493,7 +620,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
         
         try {
           this.seekTo(playerId, position);
-          // 返回空数组表示成功
           reply.reply([]);
         } catch (err) {
           reply.reply(wrapError(err));
@@ -502,7 +628,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
     });
   }
   
-  // 暂停通道
   private setupPauseChannel(binaryMessenger: BinaryMessenger): void {
     const channel: BasicMessageChannel<Object> = new BasicMessageChannel<Object>(
       binaryMessenger, 
@@ -517,7 +642,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
         
         try {
           this.pause(playerId);
-          // 返回空数组表示成功
           reply.reply([]);
         } catch (err) {
           reply.reply(wrapError(err));
@@ -526,7 +650,6 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
     });
   }
   
-  // 设置音频混合通道
   private setupSetMixWithOthersChannel(binaryMessenger: BinaryMessenger): void {
     const channel: BasicMessageChannel<Object> = new BasicMessageChannel<Object>(
       binaryMessenger, 
@@ -541,7 +664,141 @@ export class VideoPlayerApiImpl extends OhosVideoPlayerApi{
         
         try {
           this.setMixWithOthers(mixWithOthers);
-          // 返回空数组表示成功
+          reply.reply([]);
+        } catch (err) {
+          reply.reply(wrapError(err));
+        }
+      }
+    });
+  }
+
+  private setupGetAudioTracksChannel(binaryMessenger: BinaryMessenger): void {
+    const channel: BasicMessageChannel<Object> = new BasicMessageChannel<Object>(
+      binaryMessenger,
+      "dev.flutter.pigeon.video_player_ohos.OhosVideoPlayerApi.getAudioTracks",
+      OhosVideoPlayerApi.getCodec()
+    );
+
+    channel.setMessageHandler({
+      onMessage: (msg: Object, reply: Reply<Object>): void => {
+        const args = msg as Array<Object>;
+        const playerId = args[0] as number;
+        this.getAudioTracks(playerId)
+          .then((tracks: Array<Map<string, string | number | boolean | null>>) => {
+            reply.reply([tracks]);
+          })
+          .catch((err: Error) => {
+            reply.reply(wrapError(err));
+          });
+      }
+    });
+  }
+
+  private setupSelectAudioTrackChannel(binaryMessenger: BinaryMessenger): void {
+    const channel: BasicMessageChannel<Object> = new BasicMessageChannel<Object>(
+      binaryMessenger,
+      "dev.flutter.pigeon.video_player_ohos.OhosVideoPlayerApi.selectAudioTrack",
+      OhosVideoPlayerApi.getCodec()
+    );
+
+    channel.setMessageHandler({
+      onMessage: (msg: Object, reply: Reply<Object>): void => {
+        const args = msg as Array<Object>;
+        const playerId = args[0] as number;
+        const groupIndex = args[1] as number;
+        const trackIndex = args[2] as number;
+        this.selectAudioTrack(playerId, groupIndex, trackIndex)
+          .then(() => {
+            reply.reply([]);
+          })
+          .catch((err: Error) => {
+            reply.reply(wrapError(err));
+          });
+      }
+    });
+  }
+
+  private setupGetVideoTracksChannel(binaryMessenger: BinaryMessenger): void {
+    const channel: BasicMessageChannel<Object> = new BasicMessageChannel<Object>(
+      binaryMessenger,
+      "dev.flutter.pigeon.video_player_ohos.OhosVideoPlayerApi.getVideoTracks",
+      OhosVideoPlayerApi.getCodec()
+    );
+
+    channel.setMessageHandler({
+      onMessage: (msg: Object, reply: Reply<Object>): void => {
+        const args = msg as Array<Object>;
+        const playerId = args[0] as number;
+        this.getVideoTracks(playerId)
+          .then((tracks: Array<Map<string, string | number | boolean | null>>) => {
+            reply.reply([tracks]);
+          })
+          .catch((err: Error) => {
+            reply.reply(wrapError(err));
+          });
+      }
+    });
+  }
+
+  private setupSelectVideoTrackChannel(binaryMessenger: BinaryMessenger): void {
+    const channel: BasicMessageChannel<Object> = new BasicMessageChannel<Object>(
+      binaryMessenger,
+      "dev.flutter.pigeon.video_player_ohos.OhosVideoPlayerApi.selectVideoTrack",
+      OhosVideoPlayerApi.getCodec()
+    );
+
+    channel.setMessageHandler({
+      onMessage: (msg: Object, reply: Reply<Object>): void => {
+        const args = msg as Array<Object>;
+        const playerId = args[0] as number;
+        const groupIndex = args[1] as number;
+        const trackIndex = args[2] as number;
+        this.selectVideoTrack(playerId, groupIndex, trackIndex)
+          .then(() => {
+            reply.reply([]);
+          })
+          .catch((err: Error) => {
+            reply.reply(wrapError(err));
+          });
+      }
+    });
+  }
+
+  private setupSetPreventsDisplaySleepChannel(binaryMessenger: BinaryMessenger): void {
+    const channel: BasicMessageChannel<Object> = new BasicMessageChannel<Object>(
+      binaryMessenger,
+      "dev.flutter.pigeon.video_player_ohos.OhosVideoPlayerApi.setPreventsDisplaySleepDuringVideoPlayback",
+      OhosVideoPlayerApi.getCodec()
+    );
+
+    channel.setMessageHandler({
+      onMessage: (msg: Object, reply: Reply<Object>): void => {
+        const args = msg as Array<Object>;
+        const playerId = args[0] as number;
+        const preventsDisplaySleep = args[1] as boolean;
+        try {
+          this.setPreventsDisplaySleepDuringVideoPlayback(playerId, preventsDisplaySleep);
+          reply.reply([]);
+        } catch (err) {
+          reply.reply(wrapError(err));
+        }
+      }
+    });
+  }
+
+  private setupSetAllowBackgroundPlaybackChannel(binaryMessenger: BinaryMessenger): void {
+    const channel: BasicMessageChannel<Object> = new BasicMessageChannel<Object>(
+      binaryMessenger,
+      "dev.flutter.pigeon.video_player_ohos.OhosVideoPlayerApi.setAllowBackgroundPlayback",
+      OhosVideoPlayerApi.getCodec()
+    );
+
+    channel.setMessageHandler({
+      onMessage: (msg: Object, reply: Reply<Object>): void => {
+        const args = msg as Array<Object>;
+        const allowBackgroundPlayback = args[0] as boolean;
+        try {
+          this.setAllowBackgroundPlayback(allowBackgroundPlayback);
           reply.reply([]);
         } catch (err) {
           reply.reply(wrapError(err));
