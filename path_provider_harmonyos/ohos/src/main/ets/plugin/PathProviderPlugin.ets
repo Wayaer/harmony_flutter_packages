@@ -1,3 +1,9 @@
+// Copyright (c) 2023 Hunan OpenValley Digital Industry Development Co., Ltd.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE_ODID file.
+// Based on PathProviderPlugin.java originally written by
+// Copyright 2013 The Flutter Authors.
+
 import common from '@ohos.app.ability.common';
 import {
   FlutterPlugin,
@@ -21,39 +27,43 @@ export default class PathProviderPlugin extends PathProviderApi implements Flutt
 
   onAttachedToEngine(binding: FlutterPluginBinding): void {
     this.pluginBinding = binding;
-    this.context = this.pluginBinding.getApplicationContext();
-    this.setup(binding.getBinaryMessenger());
+    this.setup(binding.getBinaryMessenger(), binding.getApplicationContext());
   }
 
   onDetachedFromEngine(binding: FlutterPluginBinding): void {
     this.pluginBinding = null;
+    this.context = null;
   }
 
-  setup(messenger: BinaryMessenger) {
+  setup(messenger: BinaryMessenger, context: common.Context) {
     try {
       PathProviderApi.setup(messenger, this);
     } catch (err) {
       Log.e(TAG, "Received exception while setting up PathProviderPlugin", err);
     }
+    this.context = context;
   }
 
-  getTemporaryPath(): string {
+  getTemporaryPath(): string | null {
     return this.getPathProviderTemporaryDirectory();
   }
 
-  getApplicationSupportPath(): string {
+  getApplicationSupportPath(): string | null {
     return this.getApplicationSupportDirectory();
   }
 
-  getApplicationDocumentsPath(): string {
+  getApplicationDocumentsPath(): string | null {
     return this.getPathProviderApplicationDocumentsDirectory();
   }
 
-  getApplicationCachePath(): string {
-    return this.context?.cacheDir ?? "";
+  getApplicationCachePath(): string | null {
+    if (this.context) {
+      return this.context.cacheDir;
+    }
+    return null;
   }
 
-  getExternalStoragePath(): string {
+  getExternalStoragePath(): string | null {
     return this.getPathProviderStorageDirectory();
   }
 
@@ -65,20 +75,34 @@ export default class PathProviderPlugin extends PathProviderApi implements Flutt
     return this.getPathProviderExternalStorageDirectories(directory);
   }
 
-  private getPathProviderTemporaryDirectory(): string {
-    return this.context?.cacheDir ?? "";
+  private getPathProviderTemporaryDirectory(): string | null {
+    if (this.context) {
+      return this.context.cacheDir;
+    }
+    return null;
   }
 
-  private getApplicationSupportDirectory(): string {
-    return PathUtils.getFilesDir(this.context!);
+  private getApplicationSupportDirectory(): string | null {
+    const context = this.context;
+    if (context === null) {
+      return null;
+    }
+    return PathUtils.getFilesDir(context);
   }
 
-  private getPathProviderApplicationDocumentsDirectory(): string {
-    return PathUtils.getDataDirectory(this.context!) ?? "";
+  private getPathProviderApplicationDocumentsDirectory(): string | null {
+    const context = this.context;
+    if (context === null) {
+      return null;
+    }
+    return PathUtils.getDataDirectory(context);
   }
 
-  private getPathProviderStorageDirectory(): string {
-    return this.context?.filesDir ?? "";
+  private getPathProviderStorageDirectory(): string | null {
+    if (this.context) {
+      return this.context.filesDir;
+    }
+    return null;
   }
 
   private getPathProviderExternalCacheDirectories(): Array<string> {
@@ -91,6 +115,8 @@ export default class PathProviderPlugin extends PathProviderApi implements Flutt
 
   private getStorageDirectoryString(directory: StorageDirectory): string {
     switch (directory) {
+      case StorageDirectory.ROOT:
+        return "";
       case StorageDirectory.MUSIC:
         return "music";
       case StorageDirectory.PODCASTS:
@@ -112,25 +138,32 @@ export default class PathProviderPlugin extends PathProviderApi implements Flutt
       case StorageDirectory.DOCUMENTS:
         return "documents";
       default:
-        return "";
+        throw new Error("Unrecognized directory: " + directory);
     }
   }
 
   private getPathProviderExternalStorageDirectories(directory: StorageDirectory): Array<string> {
     const paths = new Array<string>();
-    if (this.context) {
-      const filePath = this.context.filesDir + "/" + this.getStorageDirectoryString(directory);
-      if (!fs.accessSync(filePath)) {
-        try {
-          fs.mkdirSync(filePath);
-          paths.push(filePath);
-        } catch (err) {
-          Log.e(TAG, "mkdirSync failed err:" + err);
-        }
-      } else {
-        paths.push(filePath);
-      }
+    if (!this.context) {
+      return paths;
     }
+    if (directory === StorageDirectory.ROOT) {
+      paths.push(this.context.filesDir);
+      return paths;
+    }
+    const filePath = this.context.filesDir + "/" + this.getStorageDirectoryString(directory);
+    if (!fs.accessSync(filePath)) {
+      try {
+        fs.mkdirSync(filePath);
+        paths.push(filePath);
+        Log.i(TAG, "no directory " + filePath + " create success");
+      } catch (err) {
+        Log.e(TAG, "mkdirSync failed err:" + err);
+      }
+    } else {
+      paths.push(filePath);
+    }
+
     return paths;
   }
 }

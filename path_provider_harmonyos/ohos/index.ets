@@ -1,3 +1,3 @@
-import PathProviderPlugin from './src/main/ets/PathProviderPlugin'
+import PathProviderPlugin from './src/main/ets/plugin/PathProviderPlugin'
 
 export default PathProviderPlugin

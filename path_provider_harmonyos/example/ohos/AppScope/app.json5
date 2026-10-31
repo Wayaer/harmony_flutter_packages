@@ -1,6 +1,6 @@
 {
   "app": {
-    "bundleName": "com.path.provider.harmonyos.example",
+    "bundleName": "path.provider.example",
     "vendor": "example",
     "versionCode": 1000000,
     "versionName": "1.0.0",

@@ -1,34 +1,42 @@
+// Copyright 2013 The Flutter Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
+
+enum StorageDirectory {
+  root,
+  music,
+  podcasts,
+  ringtones,
+  alarms,
+  notifications,
+  pictures,
+  movies,
+  downloads,
+  dcim,
+  documents,
+}
 
 class PathProviderApi {
-  /// Constructor for [PathProviderApi].  The [binaryMessenger] named argument is
-  /// available for dependency injection.  If it is left null, the default
-  /// BinaryMessenger will be used which routes to the host platform.
-  PathProviderApi({BinaryMessenger? binaryMessenger})
-      : _binaryMessenger = binaryMessenger;
+  PathProviderApi({BinaryMessenger? binaryMessenger}) : _binaryMessenger = binaryMessenger;
   final BinaryMessenger? _binaryMessenger;
 
   static const MessageCodec<Object?> codec = StandardMessageCodec();
 
   Future<String?> getTemporaryPath() async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.PathProviderApi.getTemporaryPath', codec,
-        binaryMessenger: _binaryMessenger);
-    final List<Object?>? replyList = await channel.send(null) as List<Object?>?;
+      'dev.flutter.pigeon.PathProviderApi.getTemporaryPath',
+      codec,
+      binaryMessenger: _binaryMessenger,
+    );
+    final List<Object?>? replyList = await channel.send(" ") as List<Object?>?;
     if (replyList == null) {
-      throw PlatformException(
-        code: 'channel-error',
-        message: 'Unable to establish connection on channel.',
-      );
+      throw PlatformException(code: 'channel-error', message: 'Unable to establish connection on channel.');
     } else if (replyList.length > 1) {
-      throw PlatformException(
-        code: replyList[0]! as String,
-        message: replyList[1] as String?,
-        details: replyList[2],
-      );
+      throw PlatformException(code: replyList[0]! as String, message: replyList[1] as String?, details: replyList[2]);
     } else {
       return (replyList[0] as String?);
     }
@@ -36,20 +44,15 @@ class PathProviderApi {
 
   Future<String?> getApplicationSupportPath() async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.PathProviderApi.getApplicationSupportPath', codec,
-        binaryMessenger: _binaryMessenger);
-    final List<Object?>? replyList = await channel.send(null) as List<Object?>?;
+      'dev.flutter.pigeon.PathProviderApi.getApplicationSupportPath',
+      codec,
+      binaryMessenger: _binaryMessenger,
+    );
+    final List<Object?>? replyList = await channel.send(" ") as List<Object?>?;
     if (replyList == null) {
-      throw PlatformException(
-        code: 'channel-error',
-        message: 'Unable to establish connection on channel.',
-      );
+      throw PlatformException(code: 'channel-error', message: 'Unable to establish connection on channel.');
     } else if (replyList.length > 1) {
-      throw PlatformException(
-        code: replyList[0]! as String,
-        message: replyList[1] as String?,
-        details: replyList[2],
-      );
+      throw PlatformException(code: replyList[0]! as String, message: replyList[1] as String?, details: replyList[2]);
     } else {
       return (replyList[0] as String?);
     }
@@ -57,20 +60,15 @@ class PathProviderApi {
 
   Future<String?> getApplicationDocumentsPath() async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.PathProviderApi.getApplicationDocumentsPath', codec,
-        binaryMessenger: _binaryMessenger);
-    final List<Object?>? replyList = await channel.send(null) as List<Object?>?;
+      'dev.flutter.pigeon.PathProviderApi.getApplicationDocumentsPath',
+      codec,
+      binaryMessenger: _binaryMessenger,
+    );
+    final List<Object?>? replyList = await channel.send(" ") as List<Object?>?;
     if (replyList == null) {
-      throw PlatformException(
-        code: 'channel-error',
-        message: 'Unable to establish connection on channel.',
-      );
+      throw PlatformException(code: 'channel-error', message: 'Unable to establish connection on channel.');
     } else if (replyList.length > 1) {
-      throw PlatformException(
-        code: replyList[0]! as String,
-        message: replyList[1] as String?,
-        details: replyList[2],
-      );
+      throw PlatformException(code: replyList[0]! as String, message: replyList[1] as String?, details: replyList[2]);
     } else {
       return (replyList[0] as String?);
     }
@@ -78,20 +76,15 @@ class PathProviderApi {
 
   Future<String?> getApplicationCachePath() async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.PathProviderApi.getApplicationCachePath', codec,
-        binaryMessenger: _binaryMessenger);
-    final List<Object?>? replyList = await channel.send(null) as List<Object?>?;
+      'dev.flutter.pigeon.PathProviderApi.getApplicationCachePath',
+      codec,
+      binaryMessenger: _binaryMessenger,
+    );
+    final List<Object?>? replyList = await channel.send(" ") as List<Object?>?;
     if (replyList == null) {
-      throw PlatformException(
-        code: 'channel-error',
-        message: 'Unable to establish connection on channel.',
-      );
+      throw PlatformException(code: 'channel-error', message: 'Unable to establish connection on channel.');
     } else if (replyList.length > 1) {
-      throw PlatformException(
-        code: replyList[0]! as String,
-        message: replyList[1] as String?,
-        details: replyList[2],
-      );
+      throw PlatformException(code: replyList[0]! as String, message: replyList[1] as String?, details: replyList[2]);
     } else {
       return (replyList[0] as String?);
     }
@@ -99,20 +92,15 @@ class PathProviderApi {
 
   Future<String?> getExternalStoragePath() async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.PathProviderApi.getExternalStoragePath', codec,
-        binaryMessenger: _binaryMessenger);
-    final List<Object?>? replyList = await channel.send(null) as List<Object?>?;
+      'dev.flutter.pigeon.PathProviderApi.getExternalStoragePath',
+      codec,
+      binaryMessenger: _binaryMessenger,
+    );
+    final List<Object?>? replyList = await channel.send(" ") as List<Object?>?;
     if (replyList == null) {
-      throw PlatformException(
-        code: 'channel-error',
-        message: 'Unable to establish connection on channel.',
-      );
+      throw PlatformException(code: 'channel-error', message: 'Unable to establish connection on channel.');
     } else if (replyList.length > 1) {
-      throw PlatformException(
-        code: replyList[0]! as String,
-        message: replyList[1] as String?,
-        details: replyList[2],
-      );
+      throw PlatformException(code: replyList[0]! as String, message: replyList[1] as String?, details: replyList[2]);
     } else {
       return (replyList[0] as String?);
     }
@@ -120,20 +108,15 @@ class PathProviderApi {
 
   Future<List<String?>> getExternalCachePaths() async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.PathProviderApi.getExternalCachePaths', codec,
-        binaryMessenger: _binaryMessenger);
-    final List<Object?>? replyList = await channel.send(null) as List<Object?>?;
+      'dev.flutter.pigeon.PathProviderApi.getExternalCachePaths',
+      codec,
+      binaryMessenger: _binaryMessenger,
+    );
+    final List<Object?>? replyList = await channel.send(" ") as List<Object?>?;
     if (replyList == null) {
-      throw PlatformException(
-        code: 'channel-error',
-        message: 'Unable to establish connection on channel.',
-      );
+      throw PlatformException(code: 'channel-error', message: 'Unable to establish connection on channel.');
     } else if (replyList.length > 1) {
-      throw PlatformException(
-        code: replyList[0]! as String,
-        message: replyList[1] as String?,
-        details: replyList[2],
-      );
+      throw PlatformException(code: replyList[0]! as String, message: replyList[1] as String?, details: replyList[2]);
     } else if (replyList[0] == null) {
       throw PlatformException(
         code: 'null-error',
@@ -144,24 +127,17 @@ class PathProviderApi {
     }
   }
 
-  Future<List<String?>> getExternalStoragePaths(
-      StorageDirectory? argDirectory) async {
+  Future<List<String?>> getExternalStoragePaths(StorageDirectory argDirectory) async {
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.PathProviderApi.getExternalStoragePaths', codec,
-        binaryMessenger: _binaryMessenger);
-    final List<Object?>? replyList =
-        await channel.send(<Object?>[argDirectory?.index]) as List<Object?>?;
+      'dev.flutter.pigeon.PathProviderApi.getExternalStoragePaths',
+      codec,
+      binaryMessenger: _binaryMessenger,
+    );
+    final List<Object?>? replyList = await channel.send(<Object?>[argDirectory.index]) as List<Object?>?;
     if (replyList == null) {
-      throw PlatformException(
-        code: 'channel-error',
-        message: 'Unable to establish connection on channel.',
-      );
+      throw PlatformException(code: 'channel-error', message: 'Unable to establish connection on channel.');
     } else if (replyList.length > 1) {
-      throw PlatformException(
-        code: replyList[0]! as String,
-        message: replyList[1] as String?,
-        details: replyList[2],
-      );
+      throw PlatformException(code: replyList[0]! as String, message: replyList[1] as String?, details: replyList[2]);
     } else if (replyList[0] == null) {
       throw PlatformException(
         code: 'null-error',
