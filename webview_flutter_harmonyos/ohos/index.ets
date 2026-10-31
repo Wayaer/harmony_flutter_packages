@@ -1,3 +1,3 @@
-import { WebViewFlutterPlugin } from './src/main/ets/WebViewFlutterPlugin'
+import { WebViewFlutterPlugin } from './src/main/ets/plugin/WebViewFlutterPlugin'
 
 export default WebViewFlutterPlugin

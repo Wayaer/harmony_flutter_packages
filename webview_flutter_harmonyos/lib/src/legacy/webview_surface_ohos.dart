@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -10,29 +10,10 @@ import 'package:flutter/widgets.dart';
 // ignore: implementation_imports
 import 'package:webview_flutter_platform_interface/src/webview_flutter_platform_interface_legacy.dart';
 
-import '../ohos_webview.dart';
-import 'webview_ohos.dart';
-import 'webview_ohos_widget.dart';
+import 'package:webview_flutter_harmonyos/src/legacy/webview_ohos.dart';
+import 'package:webview_flutter_harmonyos/src/legacy/webview_ohos_widget.dart';
 
-/// Ohos [WebViewPlatform] that uses [OhosViewSurface] to build the
-/// [WebView] widget.
-///
-/// To use this, set [WebView.platform] to an instance of this class.
-///
-/// This implementation uses [OhosViewSurface] to render the [WebView] on
-/// Ohos. It solves multiple issues related to accessibility and interaction
-/// with the [WebView] at the cost of some performance on Ohos versions below
-/// 10.
-///
-/// To support transparent backgrounds on all Ohos devices, this
-/// implementation uses hybrid composition when the opacity of
-/// `CreationParams.backgroundColor` is less than 1.0. See
-/// https://github.com/flutter/flutter/wiki/Hybrid-Composition for more
-/// information.
 class SurfaceOhosWebView extends OhosWebView {
-  /// Constructs a [SurfaceOhosWebView].
-  SurfaceOhosWebView({@visibleForTesting super.instanceManager});
-
   @override
   Widget build({
     required BuildContext context,
@@ -49,36 +30,24 @@ class SurfaceOhosWebView extends OhosWebView {
       onBuildWidget: (WebViewOhosPlatformController controller) {
         return PlatformViewLink(
           viewType: 'plugins.flutter.io/webview',
-          surfaceFactory: (
-            BuildContext context,
-            PlatformViewController controller,
-          ) {
+          surfaceFactory: (BuildContext context, PlatformViewController controller) {
             return OhosViewSurface(
               controller: controller as OhosViewController,
-              gestureRecognizers: gestureRecognizers ??
-                  const <Factory<OneSequenceGestureRecognizer>>{},
+              gestureRecognizers: gestureRecognizers ?? const <Factory<OneSequenceGestureRecognizer>>{},
               hitTestBehavior: PlatformViewHitTestBehavior.opaque,
             );
           },
           onCreatePlatformView: (PlatformViewCreationParams params) {
             final Color? backgroundColor = creationParams.backgroundColor;
             return _createViewController(
-              // On some Ohos devices, transparent backgrounds can cause
-              // rendering issues on the non hybrid composition
-              // OhosViewSurface. This switches the WebView to Hybrid
-              // Composition when the background color is not 100% opaque.
-              hybridComposition:
-                  backgroundColor != null && backgroundColor.a < 1.0,
-              id: params.id,
-              viewType: 'plugins.flutter.io/webview',
-              // WebView content is not affected by the Ohos view's layout direction,
-              // we explicitly set it here so that the widget doesn't require an ambient
-              // directionality.
-              layoutDirection:
-                  Directionality.maybeOf(context) ?? TextDirection.ltr,
-              webViewIdentifier:
-                  instanceManager.getIdentifier(controller.webView)!,
-            )
+                // 部分 Ohos 设备上非透视背景会出现渲染异常，因此背景非全不透明时改用 Hybrid Composition
+                hybridComposition: backgroundColor != null && backgroundColor.a < 1.0,
+                id: params.id,
+                viewType: 'plugins.flutter.io/webview',
+                // WebView 内容不跟随 Ohos 视图的布局方向，这里显式设置，避免依赖环境的 Directionality
+                layoutDirection: Directionality.maybeOf(context) ?? TextDirection.ltr,
+                webViewIdentifier: instanceManager.getIdentifier(controller.webView)!,
+              )
               ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
               ..addOnPlatformViewCreatedListener((int id) {
                 if (onWebViewPlatformCreated != null) {

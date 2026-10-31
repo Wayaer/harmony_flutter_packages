@@ -1,59 +1,35 @@
-/*
- * Copyright (c) 2023 Hunan OpenValley Digital Industry Development Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright 2013 The Flutter Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 import 'package:flutter/foundation.dart';
 import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 
-import 'ohos_webview.dart';
-import 'ohos_webview_controller.dart';
+import 'package:webview_flutter_harmonyos/src/ohos_webview.dart';
+import 'package:webview_flutter_harmonyos/src/ohos_webview_controller.dart';
 
-/// Object specifying creation parameters for creating a [OhosWebViewCookieManager].
-///
-/// When adding additional fields make sure they can be null or have a default
-/// value to avoid breaking changes. See [PlatformWebViewCookieManagerCreationParams] for
-/// more information.
 @immutable
-class OhosWebViewCookieManagerCreationParams
-    extends PlatformWebViewCookieManagerCreationParams {
-  /// Creates a new [OhosWebViewCookieManagerCreationParams] instance.
+class OhosWebViewCookieManagerCreationParams extends PlatformWebViewCookieManagerCreationParams {
   const OhosWebViewCookieManagerCreationParams._(
-    // This parameter prevents breaking changes later.
     // ignore: avoid_unused_constructor_parameters
     PlatformWebViewCookieManagerCreationParams params,
   ) : super();
 
-  /// Creates a [OhosWebViewCookieManagerCreationParams] instance based on [PlatformWebViewCookieManagerCreationParams].
   factory OhosWebViewCookieManagerCreationParams.fromPlatformWebViewCookieManagerCreationParams(
-      PlatformWebViewCookieManagerCreationParams params) {
+    PlatformWebViewCookieManagerCreationParams params,
+  ) {
     return OhosWebViewCookieManagerCreationParams._(params);
   }
 }
 
-/// Handles all cookie operations for the Ohos platform.
 class OhosWebViewCookieManager extends PlatformWebViewCookieManager {
-  /// Creates a new [OhosWebViewCookieManager].
-  OhosWebViewCookieManager(
-    PlatformWebViewCookieManagerCreationParams params, {
-    CookieManager? cookieManager,
-  })  : _cookieManager = cookieManager ?? CookieManager.instance,
-        super.implementation(
-          params is OhosWebViewCookieManagerCreationParams
-              ? params
-              : OhosWebViewCookieManagerCreationParams
-                  .fromPlatformWebViewCookieManagerCreationParams(params),
-        );
+  OhosWebViewCookieManager(PlatformWebViewCookieManagerCreationParams params, {CookieManager? cookieManager})
+    : _cookieManager = cookieManager ?? CookieManager.instance,
+      super.implementation(
+        params is OhosWebViewCookieManagerCreationParams
+            ? params
+            : OhosWebViewCookieManagerCreationParams.fromPlatformWebViewCookieManagerCreationParams(params),
+      );
 
   final CookieManager _cookieManager;
 
@@ -63,10 +39,33 @@ class OhosWebViewCookieManager extends PlatformWebViewCookieManager {
   }
 
   @override
+  Future<List<WebViewCookie>> getCookies(Uri url) async {
+    final String? cookies = await _cookieManager.getCookies(url.toString());
+    if (cookies == null || cookies.isEmpty) {
+      return <WebViewCookie>[];
+    }
+
+    final List<WebViewCookie> webViewCookies = <WebViewCookie>[];
+    for (final String cookie in cookies.split('; ')) {
+      final int separator = cookie.indexOf('=');
+      if (separator <= 0) {
+        continue;
+      }
+      webViewCookies.add(
+        WebViewCookie(
+          name: cookie.substring(0, separator),
+          value: cookie.substring(separator + 1),
+          domain: url.toString(),
+        ),
+      );
+    }
+    return webViewCookies;
+  }
+
+  @override
   Future<void> setCookie(WebViewCookie cookie) {
     if (!_isValidPath(cookie.path)) {
-      throw ArgumentError(
-          'The path property for the provided cookie was not given a legal value.');
+      throw ArgumentError('The path property for the provided cookie was not given a legal value.');
     }
     return _cookieManager.setCookie(
       cookie.domain,
@@ -75,7 +74,6 @@ class OhosWebViewCookieManager extends PlatformWebViewCookieManager {
   }
 
   bool _isValidPath(String path) {
-    // Permitted ranges based on RFC6265bis: https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis-02#section-4.1.1
     for (final int char in path.codeUnits) {
       if ((char < 0x20 || char > 0x3A) && (char < 0x3C || char > 0x7E)) {
         return false;
@@ -84,18 +82,9 @@ class OhosWebViewCookieManager extends PlatformWebViewCookieManager {
     return true;
   }
 
-  /// Sets whether the WebView should allow third party cookies to be set.
-  ///
-  /// Apps that target `Build.VERSION_CODES.KITKAT` or below default to allowing
-  /// third party cookies. Apps targeting `Build.VERSION_CODES.LOLLIPOP` or
-  /// later default to disallowing third party cookies.
-  Future<void> setAcceptThirdPartyCookies(
-    OhosWebViewController controller,
-    bool accept,
-  ) {
+  Future<void> setAcceptThirdPartyCookies(OhosWebViewController controller, bool accept) {
     // ignore: invalid_use_of_visible_for_testing_member
-    final WebView webView = WebView.api.instanceManager
-        .getInstanceWithWeakReference(controller.webViewIdentifier)!;
+    final WebView webView = WebView.api.instanceManager.getInstanceWithWeakReference(controller.webViewIdentifier)!;
     return _cookieManager.setAcceptThirdPartyCookies(webView, accept);
   }
 }

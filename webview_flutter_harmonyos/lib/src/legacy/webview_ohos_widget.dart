@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -9,13 +9,11 @@ import 'package:flutter/widgets.dart';
 // ignore: implementation_imports
 import 'package:webview_flutter_platform_interface/src/webview_flutter_platform_interface_legacy.dart';
 
-import '../ohos_webview.dart' as ohos_webview;
-import '../weak_reference_utils.dart';
-import 'webview_ohos_cookie_manager.dart';
+import 'package:webview_flutter_harmonyos/src/ohos_webview.dart' as ohos_webview;
+import 'package:webview_flutter_harmonyos/src/weak_reference_utils.dart';
+import 'package:webview_flutter_harmonyos/src/legacy/webview_ohos_cookie_manager.dart';
 
-/// Creates a [Widget] with a [ohos_webview.WebView].
 class WebViewOhosWidget extends StatefulWidget {
-  /// Constructs a [WebViewOhosWidget].
   const WebViewOhosWidget({
     super.key,
     required this.creationParams,
@@ -23,35 +21,22 @@ class WebViewOhosWidget extends StatefulWidget {
     required this.javascriptChannelRegistry,
     required this.onBuildWidget,
     @visibleForTesting this.webViewProxy = const WebViewProxy(),
-    @visibleForTesting
-    this.flutterAssetManager = const ohos_webview.FlutterAssetManager(),
+    @visibleForTesting this.flutterAssetManager = const ohos_webview.FlutterAssetManager(),
     @visibleForTesting this.webStorage,
   });
 
-  /// Initial parameters used to setup the WebView.
   final CreationParams creationParams;
 
-  /// Handles callbacks that are made by [ohos_webview.WebViewClient], [ohos_webview.DownloadListener], and [ohos_webview.WebChromeClient].
   final WebViewPlatformCallbacksHandler callbacksHandler;
 
-  /// Manages named JavaScript channels and forwarding incoming messages on the correct channel.
   final JavascriptChannelRegistry javascriptChannelRegistry;
 
-  /// Handles constructing [ohos_webview.WebView]s and calling static methods.
-  ///
-  /// This should only be changed for testing purposes.
   final WebViewProxy webViewProxy;
 
-  /// Manages access to Flutter assets that are part of the Ohos App bundle.
-  ///
-  /// This should only be changed for testing purposes.
   final ohos_webview.FlutterAssetManager flutterAssetManager;
 
-  /// Callback to build a widget once [ohos_webview.WebView] has been initialized.
-  final Widget Function(WebViewOhosPlatformController controller)
-      onBuildWidget;
+  final Widget Function(WebViewOhosPlatformController controller) onBuildWidget;
 
-  /// Manages the JavaScript storage APIs.
   final ohos_webview.WebStorage? webStorage;
 
   @override
@@ -80,20 +65,17 @@ class _WebViewOhosWidgetState extends State<WebViewOhosWidget> {
   }
 }
 
-/// Implementation of [WebViewPlatformController] with the Ohos WebView api.
 class WebViewOhosPlatformController extends WebViewPlatformController {
-  /// Construct a [WebViewOhosPlatformController].
   WebViewOhosPlatformController({
     required CreationParams creationParams,
     required this.callbacksHandler,
     required this.javascriptChannelRegistry,
     @visibleForTesting this.webViewProxy = const WebViewProxy(),
-    @visibleForTesting
-    this.flutterAssetManager = const ohos_webview.FlutterAssetManager(),
+    @visibleForTesting this.flutterAssetManager = const ohos_webview.FlutterAssetManager(),
     @visibleForTesting ohos_webview.WebStorage? webStorage,
-  })  : webStorage = webStorage ?? ohos_webview.WebStorage.instance,
-        assert(creationParams.webSettings?.hasNavigationDelegate != null),
-        super(callbacksHandler) {
+  }) : webStorage = webStorage ?? ohos_webview.WebStorage.instance,
+       assert(creationParams.webSettings?.hasNavigationDelegate != null),
+       super(callbacksHandler) {
     webView = webViewProxy.createWebView();
 
     webView.settings.setDomStorageEnabled(true);
@@ -115,80 +97,41 @@ class WebViewOhosPlatformController extends WebViewPlatformController {
     }
   }
 
-  final Map<String, WebViewOhosJavaScriptChannel> _javaScriptChannels =
-      <String, WebViewOhosJavaScriptChannel>{};
+  final Map<String, WebViewOhosJavaScriptChannel> _javaScriptChannels = <String, WebViewOhosJavaScriptChannel>{};
 
-  late final ohos_webview.WebViewClient _webViewClient =
-      webViewProxy.createWebViewClient(
-    onPageStarted: withWeakReferenceTo(this, (
-      WeakReference<WebViewOhosPlatformController> weakReference,
-    ) {
+  late final ohos_webview.WebViewClient _webViewClient = webViewProxy.createWebViewClient(
+    onPageStarted: withWeakReferenceTo(this, (WeakReference<WebViewOhosPlatformController> weakReference) {
       return (_, String url) {
         weakReference.target?.callbacksHandler.onPageStarted(url);
       };
     }),
-    onPageFinished: withWeakReferenceTo(this, (
-      WeakReference<WebViewOhosPlatformController> weakReference,
-    ) {
+    onPageFinished: withWeakReferenceTo(this, (WeakReference<WebViewOhosPlatformController> weakReference) {
       return (_, String url) {
         weakReference.target?.callbacksHandler.onPageFinished(url);
       };
     }),
-    onReceivedError: withWeakReferenceTo(this, (
-      WeakReference<WebViewOhosPlatformController> weakReference,
-    ) {
-      return (
-        _,
-        int errorCode,
-        String description,
-        String failingUrl,
-      ) {
-        weakReference.target?.callbacksHandler
-            .onWebResourceError(WebResourceError(
-          errorCode: errorCode,
-          description: description,
-          failingUrl: failingUrl,
-          errorType: _errorCodeToErrorType(errorCode),
-        ));
-      };
-    }),
-    onReceivedRequestError: withWeakReferenceTo(this, (
-      WeakReference<WebViewOhosPlatformController> weakReference,
-    ) {
-      return (
-        _,
-        ohos_webview.WebResourceRequest request,
-        ohos_webview.WebResourceError error,
-      ) {
+    onReceivedRequestError: withWeakReferenceTo(this, (WeakReference<WebViewOhosPlatformController> weakReference) {
+      return (_, ohos_webview.WebResourceRequest request, ohos_webview.WebResourceError error) {
         if (request.isForMainFrame) {
-          weakReference.target?.callbacksHandler
-              .onWebResourceError(WebResourceError(
-            errorCode: error.errorCode,
-            description: error.description,
-            failingUrl: request.url,
-            errorType: _errorCodeToErrorType(error.errorCode),
-          ));
+          weakReference.target?.callbacksHandler.onWebResourceError(
+            WebResourceError(
+              errorCode: error.errorCode,
+              description: error.description,
+              failingUrl: request.url,
+              errorType: _errorCodeToErrorType(error.errorCode),
+            ),
+          );
         }
       };
     }),
-    urlLoading: withWeakReferenceTo(this, (
-      WeakReference<WebViewOhosPlatformController> weakReference,
-    ) {
+    urlLoading: withWeakReferenceTo(this, (WeakReference<WebViewOhosPlatformController> weakReference) {
       return (_, String url) {
-        weakReference.target?._handleNavigationRequest(
-          url: url,
-          isForMainFrame: true,
-        );
+        weakReference.target?._handleNavigationRequest(url: url, isForMainFrame: true);
       };
     }),
-    requestLoading: withWeakReferenceTo(this, (
-      WeakReference<WebViewOhosPlatformController> weakReference,
-    ) {
+    requestLoading: withWeakReferenceTo(this, (WeakReference<WebViewOhosPlatformController> weakReference) {
       return (_, ohos_webview.WebResourceRequest request) {
-        weakReference.target?._handleNavigationRequest(
-          url: request.url,
-          isForMainFrame: request.isForMainFrame,
-        );
+        weakReference.target?._handleNavigationRequest(url: request.url, isForMainFrame: request.isForMainFrame);
       };
     }),
   );
@@ -196,86 +139,50 @@ class WebViewOhosPlatformController extends WebViewPlatformController {
   bool _hasNavigationDelegate = false;
   bool _hasProgressTracking = false;
 
-  /// Represents the WebView maintained by platform code.
   late final ohos_webview.WebView webView;
 
-  /// Handles callbacks that are made by [ohos_webview.WebViewClient], [ohos_webview.DownloadListener], and [ohos_webview.WebChromeClient].
   final WebViewPlatformCallbacksHandler callbacksHandler;
 
-  /// Manages named JavaScript channels and forwarding incoming messages on the correct channel.
   final JavascriptChannelRegistry javascriptChannelRegistry;
 
-  /// Handles constructing [ohos_webview.WebView]s and calling static methods.
-  ///
-  /// This should only be changed for testing purposes.
   final WebViewProxy webViewProxy;
 
-  /// Manages access to Flutter assets that are part of the Ohos App bundle.
-  ///
-  /// This should only be changed for testing purposes.
   final ohos_webview.FlutterAssetManager flutterAssetManager;
 
-  /// Receives callbacks when content should be downloaded instead.
   @visibleForTesting
-  late final ohos_webview.DownloadListener downloadListener =
-      ohos_webview.DownloadListener(
-    onDownloadStart: withWeakReferenceTo(
-      this,
-      (WeakReference<WebViewOhosPlatformController> weakReference) {
-        return (
-          String url,
-          String userAgent,
-          String contentDisposition,
-          String mimetype,
-          int contentLength,
-        ) {
-          weakReference.target?._handleNavigationRequest(
-            url: url,
-            isForMainFrame: true,
-          );
-        };
-      },
-    ),
+  late final ohos_webview.DownloadListener downloadListener = ohos_webview.DownloadListener(
+    onDownloadStart: withWeakReferenceTo(this, (WeakReference<WebViewOhosPlatformController> weakReference) {
+      return (String url, String userAgent, String contentDisposition, String mimetype, int contentLength) {
+        weakReference.target?._handleNavigationRequest(url: url, isForMainFrame: true);
+      };
+    }),
   );
 
-  /// Handles JavaScript dialogs, favicons, titles, new windows, and the progress for [ohos_webview.WebView].
   @visibleForTesting
-  late final ohos_webview.WebChromeClient webChromeClient =
-      ohos_webview.WebChromeClient(
-          onProgressChanged: withWeakReferenceTo(
-    this,
-    (WeakReference<WebViewOhosPlatformController> weakReference) {
+  late final ohos_webview.WebChromeClient webChromeClient = ohos_webview.WebChromeClient(
+    onProgressChanged: withWeakReferenceTo(this, (WeakReference<WebViewOhosPlatformController> weakReference) {
       return (_, int progress) {
-        final WebViewOhosPlatformController? controller =
-            weakReference.target;
+        final WebViewOhosPlatformController? controller = weakReference.target;
         if (controller != null && controller._hasProgressTracking) {
           controller.callbacksHandler.onProgress(progress);
         }
       };
-    },
-  ));
+    }),
+  );
 
-  /// Manages the JavaScript storage APIs.
   final ohos_webview.WebStorage webStorage;
 
-  /// Receive various notifications and requests for [ohos_webview.WebView].
   @visibleForTesting
   ohos_webview.WebViewClient get webViewClient => _webViewClient;
 
   @override
   Future<void> loadHtmlString(String html, {String? baseUrl}) {
-    return webView.loadDataWithBaseUrl(
-      baseUrl: baseUrl,
-      data: html,
-      mimeType: 'text/html',
-    );
+    return webView.loadDataWithBaseUrl(baseUrl: baseUrl, data: html, mimeType: 'text/html');
   }
 
   @override
   Future<void> loadFile(String absoluteFilePath) {
-    final String url = absoluteFilePath.startsWith('file://')
-        ? absoluteFilePath
-        : 'file://$absoluteFilePath';
+    final url = absoluteFilePath.startsWith('file://') ? absoluteFilePath : 'file://$absoluteFilePath';
 
     webView.settings.setAllowFileAccess(true);
     return webView.loadUrl(url, <String, String>{});
@@ -283,44 +190,28 @@ class WebViewOhosPlatformController extends WebViewPlatformController {
 
   @override
   Future<void> loadFlutterAsset(String key) async {
-    final String assetFilePath =
-        await flutterAssetManager.getAssetFilePathByName(key);
+    final String assetFilePath = await flutterAssetManager.getAssetFilePathByName(key);
     final List<String> pathElements = assetFilePath.split('/');
     final String fileName = pathElements.removeLast();
-    final List<String?> paths =
-        await flutterAssetManager.list(pathElements.join('/'));
+    final List<String?> paths = await flutterAssetManager.list(pathElements.join('/'));
 
     if (!paths.contains(fileName)) {
-      throw ArgumentError(
-        'Asset for key "$key" not found.',
-        'key',
-      );
+      throw ArgumentError('Asset for key "$key" not found.', 'key');
     }
 
-/*    return webView.loadUrl(
-      'file:///ohos_asset/$assetFilePath',
-      <String, String>{},
-    );*/
-
     webView.settings.setAllowFileAccess(true);
-    final String  url = "resources/rawfile/$assetFilePath";
+    final String url = "resources/rawfile/$assetFilePath";
     return webView.loadUrl(url, <String, String>{});
   }
 
   @override
-  Future<void> loadUrl(
-    String url,
-    Map<String, String>? headers,
-  ) {
+  Future<void> loadUrl(String url, Map<String, String>? headers) {
     return webView.loadUrl(url, headers ?? <String, String>{});
   }
 
-  /// When making a POST request, headers are ignored. As a workaround, make
-  /// the request manually and load the response data using [loadHTMLString].
+  // POST 请求会忽略 headers，这里手动发起请求并用 loadHTMLString 加载结果
   @override
-  Future<void> loadRequest(
-    WebViewRequest request,
-  ) async {
+  Future<void> loadRequest(WebViewRequest request) async {
     if (!request.uri.hasScheme) {
       throw ArgumentError('WebViewRequest#uri is required to have a scheme.');
     }
@@ -328,19 +219,14 @@ class WebViewOhosPlatformController extends WebViewPlatformController {
       case WebViewRequestMethod.get:
         return webView.loadUrl(request.uri.toString(), request.headers);
       case WebViewRequestMethod.post:
-        return webView.postUrl(
-            request.uri.toString(), request.body ?? Uint8List(0));
+        return webView.postUrl(request.uri.toString(), request.body ?? Uint8List(0));
     }
-    // The enum comes from a different package, which could get a new value at
-    // any time, so a fallback case is necessary. Since there is no reasonable
-    // default behavior, throw to alert the client that they need an updated
-    // version. This is deliberately outside the switch rather than a `default`
-    // so that the linter will flag the switch as needing an update.
     // ignore: dead_code
     throw UnimplementedError(
-        'This version of webview_ohos_widget currently has no '
-        'implementation for HTTP method ${request.method.serialize()} in '
-        'loadRequest.');
+      'This version of webview_ohos_widget currently has no '
+      'implementation for HTTP method ${request.method.serialize()} in '
+      'loadRequest.',
+    );
   }
 
   @override
@@ -372,12 +258,9 @@ class WebViewOhosPlatformController extends WebViewPlatformController {
     _hasProgressTracking = setting.hasProgressTracking ?? _hasProgressTracking;
     await Future.wait(<Future<void>>[
       _setUserAgent(setting.userAgent),
-      if (setting.hasNavigationDelegate != null)
-        _setHasNavigationDelegate(setting.hasNavigationDelegate!),
-      if (setting.javascriptMode != null)
-        _setJavaScriptMode(setting.javascriptMode!),
-      if (setting.debuggingEnabled != null)
-        _setDebuggingEnabled(setting.debuggingEnabled!),
+      if (setting.hasNavigationDelegate != null) _setHasNavigationDelegate(setting.hasNavigationDelegate!),
+      if (setting.javascriptMode != null) _setJavaScriptMode(setting.javascriptMode!),
+      if (setting.debuggingEnabled != null) _setDebuggingEnabled(setting.debuggingEnabled!),
       if (setting.zoomEnabled != null) _setZoomEnabled(setting.zoomEnabled!),
     ]);
   }
@@ -400,39 +283,30 @@ class WebViewOhosPlatformController extends WebViewPlatformController {
   @override
   Future<void> addJavascriptChannels(Set<String> javascriptChannelNames) {
     return Future.wait(
-      javascriptChannelNames.where(
-        (String channelName) {
-          return !_javaScriptChannels.containsKey(channelName);
-        },
-      ).map<Future<void>>(
-        (String channelName) {
-          final WebViewOhosJavaScriptChannel javaScriptChannel =
-              WebViewOhosJavaScriptChannel(
-                  channelName, javascriptChannelRegistry);
-          _javaScriptChannels[channelName] = javaScriptChannel;
-          return webView.addJavaScriptChannel(javaScriptChannel);
-        },
-      ),
+      javascriptChannelNames
+          .where((String channelName) {
+            return !_javaScriptChannels.containsKey(channelName);
+          })
+          .map<Future<void>>((String channelName) {
+            final javaScriptChannel = WebViewOhosJavaScriptChannel(channelName, javascriptChannelRegistry);
+            _javaScriptChannels[channelName] = javaScriptChannel;
+            return webView.addJavaScriptChannel(javaScriptChannel);
+          }),
     );
   }
 
   @override
-  Future<void> removeJavascriptChannels(
-    Set<String> javascriptChannelNames,
-  ) {
+  Future<void> removeJavascriptChannels(Set<String> javascriptChannelNames) {
     return Future.wait(
-      javascriptChannelNames.where(
-        (String channelName) {
-          return _javaScriptChannels.containsKey(channelName);
-        },
-      ).map<Future<void>>(
-        (String channelName) {
-          final WebViewOhosJavaScriptChannel javaScriptChannel =
-              _javaScriptChannels[channelName]!;
-          _javaScriptChannels.remove(channelName);
-          return webView.removeJavaScriptChannel(javaScriptChannel);
-        },
-      ),
+      javascriptChannelNames
+          .where((String channelName) {
+            return _javaScriptChannels.containsKey(channelName);
+          })
+          .map<Future<void>>((String channelName) {
+            final javaScriptChannel = _javaScriptChannels[channelName]!;
+            _javaScriptChannels.remove(channelName);
+            return webView.removeJavaScriptChannel(javaScriptChannel);
+          }),
     );
   }
 
@@ -463,31 +337,23 @@ class WebViewOhosPlatformController extends WebViewPlatformController {
     }
 
     webView.settings.setMediaPlaybackRequiresUserGesture(
-      creationParams.autoMediaPlaybackPolicy !=
-          AutoMediaPlaybackPolicy.always_allow,
+      creationParams.autoMediaPlaybackPolicy != AutoMediaPlaybackPolicy.always_allow,
     );
 
     final Color? backgroundColor = creationParams.backgroundColor;
-    if (backgroundColor != null) {
-      //webView.setBackgroundColor(backgroundColor);
-    }
+    if (backgroundColor != null) {}
 
     addJavascriptChannels(creationParams.javascriptChannelNames);
 
-    // TODO(BeMacized): Remove once platform implementations
-    // are able to register themselves (Flutter >=2.8),
-    // https://github.com/flutter/flutter/issues/94224
+    // TODO: 待平台实现可自行注册后移除（Flutter >= 2.8，见 flutter/flutter#94224）
     WebViewCookieManagerPlatform.instance ??= WebViewOhosCookieManager();
 
-    creationParams.cookies
-        .forEach(WebViewCookieManagerPlatform.instance!.setCookie);
+    creationParams.cookies.forEach(WebViewCookieManagerPlatform.instance!.setCookie);
   }
 
   Future<void> _setHasNavigationDelegate(bool hasNavigationDelegate) {
     _hasNavigationDelegate = hasNavigationDelegate;
-    return _webViewClient.setSynchronousReturnValueForShouldOverrideUrlLoading(
-      hasNavigationDelegate,
-    );
+    return _webViewClient.setSynchronousReturnValueForShouldOverrideUrlLoading(hasNavigationDelegate);
   }
 
   Future<void> _setJavaScriptMode(JavascriptMode mode) {
@@ -505,7 +371,7 @@ class WebViewOhosPlatformController extends WebViewPlatformController {
 
   Future<void> _setUserAgent(WebSetting<String?> userAgent) {
     if (userAgent.isPresent) {
-      // If the string is empty, the system default value will be used.
+      // 传入空字符串时使用系统默认 UA
       return webView.settings.setUserAgentString(userAgent.value ?? '');
     }
 
@@ -556,23 +422,15 @@ class WebViewOhosPlatformController extends WebViewPlatformController {
       return WebResourceErrorType.unknown;
     }
 
-    throw ArgumentError(
-      'Could not find a WebResourceErrorType for errorCode: $errorCode',
-    );
+    throw ArgumentError('Could not find a WebResourceErrorType for errorCode: $errorCode');
   }
 
-  void _handleNavigationRequest({
-    required String url,
-    required bool isForMainFrame,
-  }) {
+  void _handleNavigationRequest({required String url, required bool isForMainFrame}) {
     if (!_hasNavigationDelegate) {
       return;
     }
 
-    final FutureOr<bool> returnValue = callbacksHandler.onNavigationRequest(
-      url: url,
-      isForMainFrame: isForMainFrame,
-    );
+    final FutureOr<bool> returnValue = callbacksHandler.onNavigationRequest(url: url, isForMainFrame: isForMainFrame);
 
     if (returnValue is bool && returnValue) {
       loadUrl(url, <String, String>{});
@@ -586,45 +444,29 @@ class WebViewOhosPlatformController extends WebViewPlatformController {
   }
 }
 
-/// Exposes a channel to receive calls from javaScript.
-class WebViewOhosJavaScriptChannel
-    extends ohos_webview.JavaScriptChannel {
-  /// Creates a [WebViewOhosJavaScriptChannel].
-  WebViewOhosJavaScriptChannel(
-    super.channelName,
-    this.javascriptChannelRegistry,
-  ) : super(
-          postMessage: withWeakReferenceTo(
-            javascriptChannelRegistry,
-            (WeakReference<JavascriptChannelRegistry> weakReference) {
-              return (String message) {
-                weakReference.target?.onJavascriptChannelMessage(
-                  channelName,
-                  message,
-                );
-              };
-            },
-          ),
-        );
+class WebViewOhosJavaScriptChannel extends ohos_webview.JavaScriptChannel {
+  WebViewOhosJavaScriptChannel(super.channelName, this.javascriptChannelRegistry)
+    : super(
+        postMessage: withWeakReferenceTo(javascriptChannelRegistry, (
+          WeakReference<JavascriptChannelRegistry> weakReference,
+        ) {
+          return (String message) {
+            weakReference.target?.onJavascriptChannelMessage(channelName, message);
+          };
+        }),
+      );
 
-  /// Manages named JavaScript channels and forwarding incoming messages on the correct channel.
   final JavascriptChannelRegistry javascriptChannelRegistry;
 }
 
-/// Handles constructing [ohos_webview.WebView]s and calling static methods.
-///
-/// This should only be used for testing purposes.
 @visibleForTesting
 class WebViewProxy {
-  /// Creates a [WebViewProxy].
   const WebViewProxy();
 
-  /// Constructs a [ohos_webview.WebView].
   ohos_webview.WebView createWebView() {
     return ohos_webview.WebView();
   }
 
-  /// Constructs a [ohos_webview.WebViewClient].
   ohos_webview.WebViewClient createWebViewClient({
     void Function(ohos_webview.WebView webView, String url)? onPageStarted,
     void Function(ohos_webview.WebView webView, String url)? onPageFinished,
@@ -632,36 +474,20 @@ class WebViewProxy {
       ohos_webview.WebView webView,
       ohos_webview.WebResourceRequest request,
       ohos_webview.WebResourceError error,
-    )? onReceivedRequestError,
-    void Function(
-      ohos_webview.WebView webView,
-      int errorCode,
-      String description,
-      String failingUrl,
-    )? onReceivedError,
-    void Function(ohos_webview.WebView webView,
-            ohos_webview.WebResourceRequest request)?
-        requestLoading,
+    )?
+    onReceivedRequestError,
+    void Function(ohos_webview.WebView webView, ohos_webview.WebResourceRequest request)? requestLoading,
     void Function(ohos_webview.WebView webView, String url)? urlLoading,
   }) {
     return ohos_webview.WebViewClient(
       onPageStarted: onPageStarted,
       onPageFinished: onPageFinished,
       onReceivedRequestError: onReceivedRequestError,
-      onReceivedError: onReceivedError,
       requestLoading: requestLoading,
       urlLoading: urlLoading,
     );
   }
 
-  /// Enables debugging of web contents (HTML / CSS / JavaScript) loaded into any WebViews of this application.
-  ///
-  /// This flag can be enabled in order to facilitate debugging of web layouts
-  /// and JavaScript code running inside WebViews. Please refer to
-  /// [ohos_webview.WebView] documentation for the debugging guide. The
-  /// default is false.
-  ///
-  /// See [ohos_webview.WebView].setWebContentsDebuggingEnabled.
   Future<void> setWebContentsDebuggingEnabled(bool enabled) {
     return ohos_webview.WebView.setWebContentsDebuggingEnabled(enabled);
   }

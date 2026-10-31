@@ -1,6 +1,6 @@
 {
   "app": {
-    "bundleName": "com.webview.flutter.harmonyos.example",
+    "bundleName": "webview.flutter.example",
     "vendor": "example",
     "versionCode": 1000000,
     "versionName": "1.0.0",
