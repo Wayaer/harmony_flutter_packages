@@ -1,16 +1,22 @@
 name: permission_handler_harmonyos
-description: "HarmonyOS implementation of the permission_handler plugin."
-version: 0.0.1
+description: "HarmonyOS (OpenHarmony) platform implementation of the permission_handler Flutter plugin."
+version: 13.0.2
 repository: https://github.com/Wayaer/harmony_flutter_packages/tree/main/permission_handler_harmonyos
+issue_tracker: https://github.com/Wayaer/harmony_flutter_packages/issues
+topics:
+  - flutter
+  - harmonyos
+  - ohos
+  - permissions
 
 environment:
-  sdk: '>=3.6.2 <4.0.0'
-  flutter: '>=3.27.0'
+  sdk: ^3.9.0
+  flutter: ">=3.35.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  permission_handler_platform_interface: ^4.2.0
+  permission_handler_platform_interface: ^4.4.0
 
 dev_dependencies:
   flutter_lints: ^5.0.0

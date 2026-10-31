@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 export default class PermissionConstants {
   static LOG_TAG: string = 'permission_handler';
   static PERMISSION_CODE: number = 24;
@@ -7,9 +23,8 @@ export default class PermissionConstants {
   static PERMISSION_CODE_REQUEST_INSTALL_PACKAGES: number = 212;
   static PERMISSION_CODE_ACCESS_NOTIFICATION_POLICY: number = 213;
   static PERMISSION_CODE_SCHEDULE_EXACT_ALARM = 214;
-  //PERMISSION_GROUP
-  // Deprecated in favor of PERMISSION_GROUP_CALENDAR_WRITE_ONLY and
-  // PERMISSION_GROUP_CALENDAR_FULL_ACCESS.
+
+  // 已废弃，改用 PERMISSION_GROUP_CALENDAR_WRITE_ONLY 与 PERMISSION_GROUP_CALENDAR_FULL_ACCESS
   static PERMISSION_GROUP_CALENDAR: number = 0;
   static PERMISSION_GROUP_CAMERA: number = 1;
   static PERMISSION_GROUP_CONTACTS: number = 2;
@@ -50,13 +65,14 @@ export default class PermissionConstants {
   static PERMISSION_GROUP_CALENDAR_FULL_ACCESS = 37;
   static PERMISSION_GROUP_ASSISTANT = 38;
   static PERMISSION_GROUP_BACKGROUND_REFRESH = 39;
-  //PERMISSION_STATUS
+  static PERMISSION_GROUP_ACCESS_LOCAL_NETWORK = 40;
+
   static PERMISSION_STATUS_DENIED: number = 0;
   static PERMISSION_STATUS_GRANTED: number = 1;
   static PERMISSION_STATUS_RESTRICTED: number = 2;
   static PERMISSION_STATUS_LIMITED: number = 3;
   static PERMISSION_STATUS_NEVER_ASK_AGAIN: number = 4;
-  //SERVICE_STATUS
+
   static SERVICE_STATUS_DISABLED: number = 0;
   static SERVICE_STATUS_ENABLED: number = 1;
   static SERVICE_STATUS_NOT_APPLICABLE: number = 2;

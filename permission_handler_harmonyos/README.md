@@ -1,62 +1,35 @@
-<p align="center">
-  <h1 align="center"> <code>permission_handler_harmonyos</code> </h1>
-</p>
+# permission_handler_harmonyos
 
-## 1. 安装与使用
+`permission_handler` 的鸿蒙（OpenHarmony / HarmonyOS）平台实现，兼容 Flutter 插件 `permission_handler 13.0.2`。
 
-### 1.1 安装方式
-
-进入到工程目录并在 pubspec.yaml 中添加以下依赖：
-
-<!-- tabs:start -->
-
-#### pubspec.yaml
+## 安装与使用
 
 ```yaml
-...
-
 dependencies:
-  permission_handler: ^12.0.1
-  permission_handler_harmonyos: ^0.0.1
-...
+  permission_handler: ^13.0.2
+  permission_handler_harmonyos: ^13.0.2
 ```
 
-执行命令
+```dart
+import 'package:permission_handler/permission_handler.dart';
 
-```bash
-flutter pub get
+final PermissionStatus status = await Permission.camera.request();
+if (status.isGranted) {
+  // 已授权
+}
+
+await openAppSettings();
 ```
 
-<!-- tabs:end -->
+## 鸿蒙平台限制
 
-### 1.2 使用案例
+- 除动态申请外，还必须在 `module.json5` 的 `requestPermissions` 中声明对应权限。
+- 部分系统级权限只对系统应用开放，普通应用申请会失败。
+- 鸿蒙权限名称与 Android / iOS 并非一一对应，部分 `Permission` 枚举会映射为不支持。
+- `ServiceStatus` 为部分支持，依赖系统服务状态。
+- 永久拒绝后需要引导用户到应用设置页手动开启。
 
-使用案例详见 [permission_handler_harmonyos](./example)
+## 兼容版本
 
-## 2. 约束与限制
-
-### 2.1 兼容性
-
-在以下版本中已测试通过
-
-1. Flutter: 3.27.4-dev; SDK: 5.0.0(12); IDE: DevEco Studio: 5.0.13.200; ROM: 5.1.0.120 SP3;
-
-## ohos权限配置参考
-
-### [声明权限](https://docs.openharmony.cn/pages/v5.0/zh-cn/application-dev/security/AccessToken/declare-permissions.md)
-
-应用在申请权限时，需要在项目的配置文件中，逐个声明需要的权限，否则应用将无法获取授权。
-
----
-
-### [权限列表](https://docs.openharmony.cn/pages/v5.0/zh-cn/application-dev/security/AccessToken/permissions-for-all.md)
-
-#### 对所有应用开放
-
-在申请目标权限前，建议开发者先阅读申请应用权限，对权限的工作流程有基本了解后，再结合列表中权限字段的具体说明，判断应用能否申请目标权限，提高开发效率。
-
----
-
-### 注意事项
-
-    申请权限需要在ohos/entry/src/main/module.json5中声明
+- 对应上游 Flutter 插件版本：`permission_handler 13.0.2`
+- 平台接口依赖：`permission_handler_platform_interface: ^4.4.0`

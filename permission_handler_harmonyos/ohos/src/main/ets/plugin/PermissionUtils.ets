@@ -1,8 +1,25 @@
+/*
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import bundleManager from '@ohos.bundle.bundleManager';
 import ArrayList from '@ohos.util.ArrayList';
 import { Callback } from '@ohos.base';
 import Log from '@ohos/flutter_ohos/src/main/ets/util/Log';
 import PermissionConstants from './PermissionConstants';
+import { PermissionRequestResult } from '@kit.AbilityKit';
 
 const TAG: string = 'PermissionUtils';
 
@@ -21,7 +38,6 @@ export default class PermissionUtils {
         return PermissionConstants.PERMISSION_GROUP_CAMERA;
       case 'ohos.permission.READ_CONTACTS':
       case 'ohos.permission.WRITE_CONTACTS':
-        // case 'ohos.permission.GET_LOCAL_ACCOUNTS':
         return PermissionConstants.PERMISSION_GROUP_CONTACTS;
       case 'ohos.permission.LOCATION_IN_BACKGROUND':
         return PermissionConstants.PERMISSION_GROUP_LOCATION_ALWAYS;
@@ -65,6 +81,7 @@ export default class PermissionUtils {
       case 'ohos.permission.DISCOVER_BLUETOOTH':
         return PermissionConstants.PERMISSION_GROUP_BLUETOOTH_ADVERTISE;
       case 'ohos.permission.MANAGE_BLUETOOTH':
+        return PermissionConstants.PERMISSION_GROUP_BLUETOOTH;
       case 'ohos.permission.ACCESS_BLUETOOTH':
         return PermissionConstants.PERMISSION_GROUP_BLUETOOTH_CONNECT;
       case 'ohos.permission.NOTIFICATION_CONTROLLER':
@@ -84,8 +101,7 @@ export default class PermissionUtils {
     }
   }
 
-  static hasPermissionInManifest(confirmedPermission: ArrayList<string>, permission: string,
-    callback: Callback<boolean>): void {
+  static hasPermissionInManifest(confirmedPermission: ArrayList<string>, permission: string, callback: Callback<boolean>): void {
     try {
       if (confirmedPermission != null) {
         for (let confirmed of confirmedPermission) {
@@ -121,7 +137,6 @@ export default class PermissionUtils {
               permissionNames.add(requestedPermission.name);
             }
           }
-          // 不用经过getBundleInfo校验直接返回进行授权因此直接使用permissions
           callback(permissionNames);
         })
     } catch (e) {
@@ -156,7 +171,6 @@ export default class PermissionUtils {
         let contracts: ArrayList<string> = new ArrayList();
         contracts.add('ohos.permission.READ_CONTACTS');
         contracts.add('ohos.permission.WRITE_CONTACTS');
-        // contracts.add('ohos.permission.GET_LOCAL_ACCOUNTS');
         callback(contracts);
         break;
       case PermissionConstants.PERMISSION_GROUP_LOCATION_ALWAYS:
@@ -165,6 +179,10 @@ export default class PermissionUtils {
         PermissionUtils.getRequestPermission(location, callback);
         break;
       case PermissionConstants.PERMISSION_GROUP_LOCATION_WHEN_IN_USE:
+        let whenInUseLocation: ArrayList<string> = new ArrayList();
+        whenInUseLocation.add('ohos.permission.APPROXIMATELY_LOCATION');
+        PermissionUtils.getRequestPermission(whenInUseLocation, callback);
+        break;
       case PermissionConstants.PERMISSION_GROUP_LOCATION:
         let locationGroup: ArrayList<string> = new ArrayList();
         locationGroup.add('ohos.permission.LOCATION');
@@ -185,7 +203,6 @@ export default class PermissionUtils {
         phone.add('ohos.permission.ANSWER_CALL');
         phone.add('ohos.permission.READ_CALL_LOG');
         phone.add('ohos.permission.WRITE_CALL_LOG');
-        // phone.add('ohos.permission.CONNECT_CELLULAR_CALL_SERVICE');
         phone.add('ohos.permission.MANAGE_VOICEMAIL');
         callback(phone);
         break;
@@ -251,7 +268,6 @@ export default class PermissionUtils {
         break;
       case PermissionConstants.PERMISSION_GROUP_BLUETOOTH_CONNECT:
         let bluetoothConnect: ArrayList<string> = new ArrayList();
-        bluetoothConnect.add('ohos.permission.MANAGE_BLUETOOTH');
         bluetoothConnect.add('ohos.permission.ACCESS_BLUETOOTH');
         callback(bluetoothConnect);
         break;
@@ -278,12 +294,18 @@ export default class PermissionUtils {
       case PermissionConstants.PERMISSION_GROUP_SCHEDULE_EXACT_ALARM:
         let exactAlarm: ArrayList<string> = new ArrayList();
         exactAlarm.add('ohos.permission.SCHEDULE_EXACT_ALARM');
-        callback(permissionNames);
+        callback(exactAlarm);
         break;
       case PermissionConstants.PERMISSION_GROUP_MEDIA_LIBRARY:
       case PermissionConstants.PERMISSION_GROUP_REMINDERS:
       case PermissionConstants.PERMISSION_GROUP_UNKNOWN:
         callback(null);
+        break;
+      case PermissionConstants.PERMISSION_GROUP_ASSISTANT:
+      case PermissionConstants.PERMISSION_GROUP_BACKGROUND_REFRESH:
+      case PermissionConstants.PERMISSION_GROUP_ACCESS_LOCAL_NETWORK:
+        // HarmonyOS 没有与这些 Permission 对应的权限，返回空列表（状态为 denied）。
+        callback(permissionNames);
         break;
       default:
         callback(permissionNames);

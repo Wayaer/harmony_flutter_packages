@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ 
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import { MethodCallHandler, MethodResult } from '@ohos/flutter_ohos/src/main/ets/plugin/common/MethodChannel';
 import common from '@ohos.app.ability.common';
 import MethodCall from '@ohos/flutter_ohos/src/main/ets/plugin/common/MethodCall';
@@ -39,19 +55,19 @@ export class MethodCallHandlerImpl implements MethodCallHandler {
             result.error(errorCode, errorDescription, null);
           }
         } as ESObject);
-        break
+      break
       case 'checkPermissionStatus':
         let checkedPermission: number = call.args;
         this.permissionManager.checkPermissionStatus(checkedPermission, this.applicationContext, {
-          onSuccess: (permissionStatus: number) => {
+          onSuccess : (permissionStatus: number) => {
             result.success(permissionStatus);
           }
         } as ESObject);
-        break;
+      break;
       case 'requestPermissions':
         let permissions: ArrayList<number> = call.args;
         this.permissionManager.requestPermissions(permissions, this.ability as UIAbility, {
-          onSuccess: (results: Map<number, number>) => {
+          onSuccess : (results:  Map<number, number>) => {
             result.success(results);
           }
         } as ESObject, {
@@ -59,11 +75,11 @@ export class MethodCallHandlerImpl implements MethodCallHandler {
             result.error(errorCode, errorDescription, null);
           }
         } as ESObject);
-        break;
+      break;
       case 'shouldShowRequestPermissionRationale':
         let showShowPermission: number = call.args;
         this.permissionManager.shouldShowRequestPermissionRationale(showShowPermission, {
-          onSuccess: (isShow: boolean) => {
+          onSuccess : (isShow: boolean) => {
             result.success(isShow);
           }
         } as ESObject, {
@@ -71,7 +87,7 @@ export class MethodCallHandlerImpl implements MethodCallHandler {
             result.error(errorCode, errorDescription, null);
           }
         } as ESObject);
-        break;
+      break;
       case 'openAppSettings':
         this.appSettingManager.openAppSettings(this.applicationContext, this.ability, {
           onSuccess: (isSuccess: boolean) => {
@@ -82,10 +98,10 @@ export class MethodCallHandlerImpl implements MethodCallHandler {
             result.error(errorCode, errorDescription, null);
           }
         } as ESObject);
-        break;
+      break;
       default:
-        result.notImplemented();
-        break;
+      result.notImplemented();
+      break;
     }
   }
 }
