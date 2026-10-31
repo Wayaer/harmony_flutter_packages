@@ -3,17 +3,14 @@ description: "Demonstrates how to use the image_picker_harmonyos plugin."
 publish_to: 'none'
 
 environment:
-  sdk: ^3.6.2
+  sdk: ^3.11.0
+  flutter: ">=3.41.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  flutter_driver:
-    sdk: flutter
-  mime: ^2.0.0
-  image_picker: ^1.2.0
-  image_picker_harmonyos:
-    path: ../
+  image_picker: ^1.2.4
+  image_picker_harmonyos: ^1.2.4
 
 dev_dependencies:
   flutter_lints: ^5.0.0

@@ -1,3 +1,9 @@
+// Copyright (c) 2023 Hunan OpenValley Digital Industry Development Co., Ltd.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE_ODID file.
+// Based on ImageResizer.java originally written by
+// Copyright 2013 The Flutter Authors.
+
 import image from '@ohos.multimedia.image';
 import fs from '@ohos.file.fs';
 import common from '@ohos.app.ability.common';
@@ -40,6 +46,9 @@ export default class ImageResizer {
 
       let targetSize: image.Size = this.calculateTargetSize(imageInfo.size.width, imageInfo.size.height, maxWidth,
         maxHeight);
+      Log.d(TAG, "Start scale image, origin w:" + imageInfo.size.width + " origin h:" + imageInfo.size.width +
+        " target w:" + targetSize.width + " target h:" + targetSize.height);
+
       let parts: string[] = imagePath.split('/', -1);
       let imageName: string = parts[parts.length - 1];
       imagePixelMap = await imageSource.createPixelMap({
@@ -70,7 +79,7 @@ export default class ImageResizer {
   }
 
   private calculateTargetSize(originalWidth: number, originalHeight: number, maxWidth: number,
-    maxHeight: number): image.Size {
+                              maxHeight: number): image.Size {
     let hasMaxWidth: boolean = maxWidth != null;
     let hasMaxHeight: boolean = maxHeight != null;
 
@@ -115,12 +124,12 @@ export default class ImageResizer {
     Promise<string> {
     let imagePackerApi: image.ImagePacker | null = null;
     let outFile: fs.File | null = null;
-    let outFileName: string = this.context.cacheDir + "scaled_" + imageName;
+    let outFileName: string = this.context.cacheDir + "/" + "scaled_" + imageName;
 
     try {
       imagePackerApi = image.createImagePacker();
       let bufferData = await imagePackerApi.packing(imagePixelMap, {
-        format: "image/jpeg", quality: imageQuality
+        format: "image/jpeg", quality: imageQuality, needsPackProperties: true
       });
 
       outFile = fs.openSync(outFileName, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);

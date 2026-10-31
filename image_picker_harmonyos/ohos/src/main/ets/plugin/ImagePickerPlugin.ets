@@ -1,3 +1,9 @@
+// Copyright (c) 2023 Hunan OpenValley Digital Industry Development Co., Ltd.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE_ODID file.
+// Based on ImagePickerPlugin.java originally written by
+// Copyright 2013 The Flutter Authors.
+
 import AbilityLifecycleCallback from '@ohos.app.ability.AbilityLifecycleCallback';
 
 import AbilityAware from '@ohos/flutter_ohos/src/main/ets/embedding/engine/plugins/ability/AbilityAware';
@@ -31,14 +37,17 @@ import ExifDataCopier from './ExifDataCopier';
 import ImageResizer from './ImageResizer';
 import UIAbility from '@ohos.app.ability.UIAbility';
 import ArrayList from '@ohos.util.ArrayList';
-import ImagePickerUtils from './ImagePickerUtils';
+import Log from '@ohos/flutter_ohos/src/main/ets/util/Log';
+
+const TAG: string = "ImagePickerPlugin";
 
 export default class ImagePickerPlugin implements FlutterPlugin, AbilityAware {
+  private static TAG = "ImagePickerPlugin";
   private pluginBinding: FlutterPluginBinding | null = null;
   private state: AbilityState | null = null;
 
   getUniqueClassName(): string {
-    return "ImagePickerPlugin";
+    return ImagePickerPlugin.TAG;
   }
 
   onAttachedToEngine(binding: FlutterPluginBinding): void {
@@ -50,6 +59,7 @@ export default class ImagePickerPlugin implements FlutterPlugin, AbilityAware {
   }
 
   onAttachedToAbility(binding: AbilityPluginBinding): void {
+    Log.i(TAG, "onAttachedToAbility");
     if (!this.pluginBinding) {
       return
     }
@@ -74,19 +84,16 @@ export default class ImagePickerPlugin implements FlutterPlugin, AbilityAware {
     }
   }
 
-  pickImages(source: SourceSpecification, options: ImageSelectionOptions, generalOptions: GeneralOptions,
-    result: Result<ArrayList<string>>) {
+  pickImages(source: SourceSpecification, options: ImageSelectionOptions, generalOptions: GeneralOptions, result: Result<ArrayList<string>>) {
     let delegate: ImagePickerDelegate | null = this.getImagePickerDelegate();
-    if (delegate == null) {
-      let temp: Error =
-        result.error(new FlutterError("no_ability", "image_picker plugin requires a foreground ability", null));
+    if (delegate === null) {
+      result.error(new FlutterError("no_ability", "image_picker plugin requires a foreground ability", null));
       return;
     }
 
     this.setCameraDevice(delegate, source);
     if (generalOptions.getAllowMultiple()) {
-      const limit = generalOptions.getLimit();
-      delegate.chooseMultiImagesFromGallery(options, generalOptions.getUsePhotoPicker(), limit, result);
+      delegate.chooseMultiImagesFromGallery(options, generalOptions, result);
     } else {
       switch (source.getType()) {
         case SourceType.GALLERY: {
@@ -100,18 +107,17 @@ export default class ImagePickerPlugin implements FlutterPlugin, AbilityAware {
     }
   }
 
-  pickVideos(source: SourceSpecification, options: VideoSelectionOptions, generalOptions: GeneralOptions,
-    result: Result<ArrayList<string>>): void {
+  pickVideos(source: SourceSpecification, options: VideoSelectionOptions, generalOptions: GeneralOptions, result: Result<ArrayList<string>>): void {
     let delegate: ImagePickerDelegate | null = this.getImagePickerDelegate();
-    if (delegate == null) {
-      result.error(new FlutterError("no_ability", "image_picke rplugin requires a foreground ability", null));
+    if (delegate === null) {
+      result.error(new FlutterError("no_ability", "image_pickerplugin requires a foreground ability", null));
       return;
     }
 
     this.setCameraDevice(delegate, source);
     if (generalOptions.getAllowMultiple()) {
-      const limit = generalOptions.getLimit();
-      delegate.chooseMultiVideosFromGallery(options, generalOptions.getUsePhotoPicker(), limit, result);
+      let limit = generalOptions.getLimitfromOption(generalOptions);
+      delegate.chooseMultiVideoFromGallery(options, generalOptions.getUsePhotoPicker(), limit, result);
     } else {
       switch (source.getType()) {
         case SourceType.GALLERY: {
@@ -120,16 +126,14 @@ export default class ImagePickerPlugin implements FlutterPlugin, AbilityAware {
         }
         case SourceType.CAMERA: {
           delegate.takeVideoWithCamera(options, result);
-          break;
         }
       }
     }
   }
 
-  pickMedia(mediaSelectionOptions: MediaSelectionOptions, generalOptions: GeneralOptions,
-    result: Result<ArrayList<string>>): void {
+  pickMedia(mediaSelectionOptions: MediaSelectionOptions, generalOptions: GeneralOptions, result: Result<ArrayList<string>>): void {
     let delegate: ImagePickerDelegate | null = this.getImagePickerDelegate();
-    if (delegate == null) {
+    if (delegate === null) {
       result.error(new FlutterError("no_ability", "image_pickerplugin requires a foreground ability", null));
       return;
     }
@@ -191,8 +195,7 @@ class AbilityState {
   private delegate: ImagePickerDelegate | null = null;
   private abilityLifecycleCallback: AbilityLifecycleCallback;
 
-  constructor(ability: UIAbility, delegate?: ImagePickerDelegate | null, messenger?: BinaryMessenger,
-    handler?: ImagePickerApi, abilityBinding?: AbilityPluginBinding, context?: common.Context) {
+  constructor(ability: UIAbility, delegate?: ImagePickerDelegate | null, messenger?: BinaryMessenger, handler?: ImagePickerApi, abilityBinding?: AbilityPluginBinding, context?: common.Context) {
     this.ability = ability;
     if (context) {
       this.context = context;

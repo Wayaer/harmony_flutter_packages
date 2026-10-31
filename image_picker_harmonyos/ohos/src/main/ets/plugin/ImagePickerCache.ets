@@ -1,3 +1,9 @@
+// Copyright (c) 2023 Hunan OpenValley Digital Industry Development Co., Ltd.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE_ODID file.
+// Based on ImagePickerCache.java originally written by
+// Copyright 2013 The Flutter Authors.
+
 import common from '@ohos.app.ability.common';
 import data_preferences from '@ohos.data.preferences'
 import ArrayList from '@ohos.util.ArrayList';
@@ -84,8 +90,7 @@ export default class ImagePickerCache {
       });
   }
 
-  private async getPreferenceData(key: string,
-    defValue: data_preferences.ValueType | null): Promise<data_preferences.ValueType | null> {
+  private async getPreferenceData(key: string, defValue: data_preferences.ValueType | null): Promise<data_preferences.ValueType | null> {
     if (this.preferences == null) {
       return defValue;
     }
@@ -181,8 +186,7 @@ export default class ImagePickerCache {
   }
 
   async getCacheMap(): Promise<HashMap<string, ArrayList<data_preferences.ValueType>>> {
-    const resultMap: HashMap<string, ArrayList<data_preferences.ValueType> | ESObject> =
-      new HashMap<string, ArrayList<data_preferences.ValueType> | ESObject>();
+    const resultMap: HashMap<string, ArrayList<data_preferences.ValueType> | ESObject> = new HashMap<string, ArrayList<data_preferences.ValueType> | ESObject>();
     let hasData = false;
     let hasKey = await this.hasKey(ImagePickerCache.FLUTTER_IMAGE_PICKER_IMAGE_PATH_KEY).then((result) => {
       return result;
@@ -244,8 +248,7 @@ export default class ImagePickerCache {
             return data;
           });
 
-        resultMap.set(ImagePickerCache.MAP_KEY_TYPE,
-          type == ImagePickerCache.MAP_TYPE_VALUE_VIDEO ? CacheRetrievalType.VIDEO : CacheRetrievalType.IMAGE);
+        resultMap.set(ImagePickerCache.MAP_KEY_TYPE, type == ImagePickerCache.MAP_TYPE_VALUE_VIDEO ? CacheRetrievalType.VIDEO : CacheRetrievalType.IMAGE);
       }
       hasKey = await this.hasKey(ImagePickerCache.SHARED_PREFERENCE_MAX_WIDTH_KEY).then((result) => {
         return result;
@@ -267,13 +270,17 @@ export default class ImagePickerCache {
           });
         resultMap.set(ImagePickerCache.MAP_KEY_MAX_HEIGHT, maxHeightValue);
       }
-      await this.getPreferenceData(ImagePickerCache.SHARED_PREFERENCE_IMAGE_QUALITY_KEY, 100)
-        .then((data) => {
-          return data;
-        });
-      resultMap.set(ImagePickerCache.MAP_KEY_IMAGE_QUALITY, ImagePickerCache);
+      hasKey = await this.hasKey(ImagePickerCache.SHARED_PREFERENCE_IMAGE_QUALITY_KEY).then((result) => {
+        return result;
+      });
+      if (hasKey) {
+        let imageQualityValue = await this.getPreferenceData(ImagePickerCache.SHARED_PREFERENCE_IMAGE_QUALITY_KEY, 100)
+          .then((data) => {
+            return data;
+          });
+        resultMap.set(ImagePickerCache.MAP_KEY_IMAGE_QUALITY, imageQualityValue);
+      }
     }
-
     return resultMap;
   }
 }

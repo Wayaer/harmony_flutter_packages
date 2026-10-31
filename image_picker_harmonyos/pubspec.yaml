@@ -1,16 +1,23 @@
 name: image_picker_harmonyos
-description: "HarmonyOS implementation of the image_picker plugin."
-version: 0.0.1
+description: "HarmonyOS (OpenHarmony) platform implementation of the image_picker Flutter plugin."
+version: 1.2.4
 repository: https://github.com/Wayaer/harmony_flutter_packages/tree/main/image_picker_harmonyos
+issue_tracker: https://github.com/Wayaer/harmony_flutter_packages/issues
+topics:
+  - flutter
+  - harmonyos
+  - ohos
+  - image-picker
+  - camera
 
 environment:
-  sdk: '>=3.6.2 <4.0.0'
-  flutter: '>=3.27.0'
+  sdk: ^3.11.0
+  flutter: ">=3.41.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  image_picker_platform_interface: ^2.8.0
+  image_picker_platform_interface: ^2.11.0
 
 dev_dependencies:
   flutter_lints: ^5.0.0
@@ -21,4 +28,4 @@ flutter:
     platforms:
       ohos:
         pluginClass: ImagePickerPlugin
-        dartPluginClass: ImagePickerHarmonyOS
+        dartPluginClass: ImagePickerOhos

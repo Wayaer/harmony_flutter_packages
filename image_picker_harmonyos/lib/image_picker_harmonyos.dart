@@ -1,21 +1,26 @@
+// Copyright 2013 The Flutter Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker_harmonyos/src/messages.g.dart';
 import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
-
-import 'src/messages.g.dart';
 
 export 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 
-class ImagePickerHarmonyOS extends ImagePickerPlatform {
-  ImagePickerHarmonyOS({@visibleForTesting ImagePickerApi? api})
-      : _hostApi = api ?? ImagePickerApi();
+class ImagePickerOhos extends ImagePickerPlatform {
+  ImagePickerOhos({@visibleForTesting ImagePickerApi? api}) : _hostApi = api ?? ImagePickerApi();
 
   final ImagePickerApi _hostApi;
 
-  bool useOhosPhotoPicker = true;
+  /// 是否使用鸿蒙系统 PhotoPicker。
+  ///
+  /// 该开关目前仅保留，`true` / `false` 都走系统 PhotoPicker。
+  bool useOhosPhotoPicker = false;
 
   static void registerWith() {
-    ImagePickerPlatform.instance = ImagePickerHarmonyOS();
+    ImagePickerPlatform.instance = ImagePickerOhos();
   }
 
   @override
@@ -26,65 +31,55 @@ class ImagePickerHarmonyOS extends ImagePickerPlatform {
     int? imageQuality,
     CameraDevice preferredCameraDevice = CameraDevice.rear,
   }) async {
-    final String? path = await _getImagePath(
+    final path = await _getImagePath(
       source: source,
       maxWidth: maxWidth,
       maxHeight: maxHeight,
       imageQuality: imageQuality,
       preferredCameraDevice: preferredCameraDevice,
     );
-    return path != null ? PickedFile(path) : null;
+    return path == null ? null : PickedFile(path);
   }
 
   @override
-  Future<List<PickedFile>?> pickMultiImage({
-    double? maxWidth,
-    double? maxHeight,
-    int? imageQuality,
-    int? limit,
-  }) async {
-    final List<dynamic> paths = await _getMultiImagePath(
-      maxWidth: maxWidth,
-      maxHeight: maxHeight,
-      imageQuality: imageQuality,
-      limit: limit,
-    );
+  Future<List<PickedFile>?> pickMultiImage({double? maxWidth, double? maxHeight, int? imageQuality}) async {
+    final paths = await _getMultiImagePath(maxWidth: maxWidth, maxHeight: maxHeight, imageQuality: imageQuality);
     if (paths.isEmpty) {
       return null;
     }
-
-    return paths.map((dynamic path) => PickedFile(path as String)).toList();
+    return _pickedFilesFromPaths(paths);
   }
 
-  Future<List<String>> _getMultiImagePath({
-    double? maxWidth,
-    double? maxHeight,
-    int? imageQuality,
-    int? limit,
-  }) {
-    if (imageQuality != null && (imageQuality < 0 || imageQuality > 100)) {
-      throw ArgumentError.value(
-          imageQuality, 'imageQuality', 'must be between 0 and 100');
-    }
+  List<PickedFile> _pickedFilesFromPaths(List<String?> paths) {
+    return paths.whereType<String>().map(PickedFile.new).toList();
+  }
 
+  List<XFile> _xFilesFromPaths(List<String?> paths) {
+    return paths.whereType<String>().map(XFile.new).toList();
+  }
+
+  void _validateImageOptions({double? maxWidth, double? maxHeight, int? imageQuality}) {
+    if (imageQuality != null && (imageQuality < 0 || imageQuality > 100)) {
+      throw ArgumentError.value(imageQuality, 'imageQuality', 'must be between 0 and 100');
+    }
     if (maxWidth != null && maxWidth < 0) {
       throw ArgumentError.value(maxWidth, 'maxWidth', 'cannot be negative');
     }
-
     if (maxHeight != null && maxHeight < 0) {
       throw ArgumentError.value(maxHeight, 'maxHeight', 'cannot be negative');
+    }
+  }
+
+  Future<List<String?>> _getMultiImagePath({double? maxWidth, double? maxHeight, int? imageQuality, int? limit}) {
+    _validateImageOptions(maxWidth: maxWidth, maxHeight: maxHeight, imageQuality: imageQuality);
+    if (limit != null && limit < 2) {
+      throw ArgumentError.value(limit, 'limit', 'cannot be lower than 2');
     }
 
     return _hostApi.pickImages(
       SourceSpecification(type: SourceType.gallery),
-      ImageSelectionOptions(
-          maxWidth: maxWidth,
-          maxHeight: maxHeight,
-          quality: imageQuality ?? 100),
-      GeneralOptions(
-          allowMultiple: true,
-          limit: limit,
-          usePhotoPicker: useOhosPhotoPicker),
+      ImageSelectionOptions(maxWidth: maxWidth, maxHeight: maxHeight, quality: imageQuality ?? 100),
+      GeneralOptions(allowMultiple: true, usePhotoPicker: useOhosPhotoPicker, limit: limit),
     );
   }
 
@@ -96,29 +91,12 @@ class ImagePickerHarmonyOS extends ImagePickerPlatform {
     CameraDevice preferredCameraDevice = CameraDevice.rear,
     bool requestFullMetadata = true,
   }) async {
-    if (imageQuality != null && (imageQuality < 0 || imageQuality > 100)) {
-      throw ArgumentError.value(
-          imageQuality, 'imageQuality', 'must be between 0 and 100');
-    }
+    _validateImageOptions(maxWidth: maxWidth, maxHeight: maxHeight, imageQuality: imageQuality);
 
-    if (maxWidth != null && maxWidth < 0) {
-      throw ArgumentError.value(maxWidth, 'maxWidth', 'cannot be negative');
-    }
-
-    if (maxHeight != null && maxHeight < 0) {
-      throw ArgumentError.value(maxHeight, 'maxHeight', 'cannot be negative');
-    }
-
-    final List<String?> paths = await _hostApi.pickImages(
+    final paths = await _hostApi.pickImages(
       _buildSourceSpec(source, preferredCameraDevice),
-      ImageSelectionOptions(
-          maxWidth: maxWidth,
-          maxHeight: maxHeight,
-          quality: imageQuality ?? 100),
-      GeneralOptions(
-        allowMultiple: false,
-        usePhotoPicker: useOhosPhotoPicker,
-      ),
+      ImageSelectionOptions(maxWidth: maxWidth, maxHeight: maxHeight, quality: imageQuality ?? 100),
+      GeneralOptions(allowMultiple: false, usePhotoPicker: useOhosPhotoPicker),
     );
     return paths.isEmpty ? null : paths.first;
   }
@@ -129,12 +107,12 @@ class ImagePickerHarmonyOS extends ImagePickerPlatform {
     CameraDevice preferredCameraDevice = CameraDevice.rear,
     Duration? maxDuration,
   }) async {
-    final String? path = await _getVideoPath(
+    final path = await _getVideoPath(
       source: source,
       maxDuration: maxDuration,
       preferredCameraDevice: preferredCameraDevice,
     );
-    return path != null ? PickedFile(path) : null;
+    return path == null ? null : PickedFile(path);
   }
 
   Future<String?> _getVideoPath({
@@ -142,13 +120,10 @@ class ImagePickerHarmonyOS extends ImagePickerPlatform {
     CameraDevice preferredCameraDevice = CameraDevice.rear,
     Duration? maxDuration,
   }) async {
-    final List<String?> paths = await _hostApi.pickVideos(
+    final paths = await _hostApi.pickVideos(
       _buildSourceSpec(source, preferredCameraDevice),
       VideoSelectionOptions(maxDurationSeconds: maxDuration?.inSeconds),
-      GeneralOptions(
-        allowMultiple: false,
-        usePhotoPicker: useOhosPhotoPicker,
-      ),
+      GeneralOptions(allowMultiple: false, usePhotoPicker: useOhosPhotoPicker),
     );
     return paths.isEmpty ? null : paths.first;
   }
@@ -161,14 +136,14 @@ class ImagePickerHarmonyOS extends ImagePickerPlatform {
     int? imageQuality,
     CameraDevice preferredCameraDevice = CameraDevice.rear,
   }) async {
-    final String? path = await _getImagePath(
+    final path = await _getImagePath(
       source: source,
       maxWidth: maxWidth,
       maxHeight: maxHeight,
       imageQuality: imageQuality,
       preferredCameraDevice: preferredCameraDevice,
     );
-    return path != null ? XFile(path) : null;
+    return path == null ? null : XFile(path);
   }
 
   @override
@@ -176,7 +151,7 @@ class ImagePickerHarmonyOS extends ImagePickerPlatform {
     required ImageSource source,
     ImagePickerOptions options = const ImagePickerOptions(),
   }) async {
-    final String? path = await _getImagePath(
+    final path = await _getImagePath(
       source: source,
       maxHeight: options.maxHeight,
       maxWidth: options.maxWidth,
@@ -184,51 +159,41 @@ class ImagePickerHarmonyOS extends ImagePickerPlatform {
       preferredCameraDevice: options.preferredCameraDevice,
       requestFullMetadata: options.requestFullMetadata,
     );
-    return path != null ? XFile(path) : null;
+    return path == null ? null : XFile(path);
   }
 
   @override
-  Future<List<XFile>?> getMultiImage({
-    double? maxWidth,
-    double? maxHeight,
-    int? imageQuality,
-  }) async {
-    final List<dynamic> paths = await _getMultiImagePath(
-      maxWidth: maxWidth,
-      maxHeight: maxHeight,
-      imageQuality: imageQuality,
-    );
-    if (paths.isEmpty) return null;
-    return paths.map((dynamic path) => XFile(path as String)).toList();
+  Future<List<XFile>?> getMultiImage({double? maxWidth, double? maxHeight, int? imageQuality}) async {
+    final paths = await _getMultiImagePath(maxWidth: maxWidth, maxHeight: maxHeight, imageQuality: imageQuality);
+    if (paths.isEmpty) {
+      return null;
+    }
+    return _xFilesFromPaths(paths);
   }
 
   @override
   Future<List<XFile>> getMultiImageWithOptions({
     MultiImagePickerOptions options = const MultiImagePickerOptions(),
   }) async {
-    final List<String> paths = await _getMultiImagePath(
+    final paths = await _getMultiImagePath(
       maxWidth: options.imageOptions.maxWidth,
       maxHeight: options.imageOptions.maxHeight,
       imageQuality: options.imageOptions.imageQuality,
       limit: options.limit,
     );
-
     if (paths.isEmpty) {
       return <XFile>[];
     }
-
-    return paths.map((String path) => XFile(path)).toList();
+    return _xFilesFromPaths(paths);
   }
 
   @override
-  Future<List<XFile>> getMedia({
-    required MediaOptions options,
-  }) async {
-    return (await _hostApi.pickMedia(
+  Future<List<XFile>> getMedia({required MediaOptions options}) async {
+    final paths = await _hostApi.pickMedia(
       _mediaOptionsToMediaSelectionOptions(options),
-            _mediaOptionsToGeneralOptions(options)))
-        .map((String? path) => XFile(path!))
-        .toList();
+      _mediaOptionsToGeneralOptions(options),
+    );
+    return _xFilesFromPaths(paths);
   }
 
   @override
@@ -237,96 +202,61 @@ class ImagePickerHarmonyOS extends ImagePickerPlatform {
     CameraDevice preferredCameraDevice = CameraDevice.rear,
     Duration? maxDuration,
   }) async {
-    final String? path = await _getVideoPath(
+    final path = await _getVideoPath(
       source: source,
       maxDuration: maxDuration,
       preferredCameraDevice: preferredCameraDevice,
     );
-    return path != null ? XFile(path) : null;
+    return path == null ? null : XFile(path);
   }
 
   @override
   Future<List<XFile>> getMultiVideoWithOptions({
     MultiVideoPickerOptions options = const MultiVideoPickerOptions(),
   }) async {
-    final List<String> paths = await _hostApi.pickVideos(
+    final paths = await _hostApi.pickVideos(
       SourceSpecification(type: SourceType.gallery),
       VideoSelectionOptions(maxDurationSeconds: options.maxDuration?.inSeconds),
-      GeneralOptions(
-        allowMultiple: true,
-        usePhotoPicker: useOhosPhotoPicker,
-        limit: options.limit,
-      ),
+      GeneralOptions(allowMultiple: true, usePhotoPicker: useOhosPhotoPicker, limit: options.limit),
     );
-
-    if (paths.isEmpty) {
-      return <XFile>[];
-    }
-
-    return paths.map((String path) => XFile(path)).toList();
+    return _xFilesFromPaths(paths);
   }
 
-  MediaSelectionOptions _mediaOptionsToMediaSelectionOptions(
-      MediaOptions mediaOptions) {
-    final ImageSelectionOptions imageSelectionOptions =
-        _imageOptionsToImageSelectionOptionsWithValidator(
-            mediaOptions.imageOptions);
-    return MediaSelectionOptions(imageSelectionOptions: imageSelectionOptions);
+  MediaSelectionOptions _mediaOptionsToMediaSelectionOptions(MediaOptions mediaOptions) {
+    return MediaSelectionOptions(
+      imageSelectionOptions: _imageOptionsToImageSelectionOptionsWithValidator(mediaOptions.imageOptions),
+    );
   }
 
-  ImageSelectionOptions _imageOptionsToImageSelectionOptionsWithValidator(
-      ImageOptions? imageOptions) {
-    final double? maxHeight = imageOptions?.maxHeight;
-    final double? maxWidth = imageOptions?.maxWidth;
-    final int? imageQuality = imageOptions?.imageQuality;
+  ImageSelectionOptions _imageOptionsToImageSelectionOptionsWithValidator(ImageOptions? imageOptions) {
+    final maxHeight = imageOptions?.maxHeight;
+    final maxWidth = imageOptions?.maxWidth;
+    final imageQuality = imageOptions?.imageQuality;
 
-    if (imageQuality != null && (imageQuality < 0 || imageQuality > 100)) {
-      throw ArgumentError.value(
-          imageQuality, 'imageQuality', 'must be between 0 and 100');
-    }
-
-    if (maxWidth != null && maxWidth < 0) {
-      throw ArgumentError.value(maxWidth, 'maxWidth', 'cannot be negative');
-    }
-
-    if (maxHeight != null && maxHeight < 0) {
-      throw ArgumentError.value(maxHeight, 'maxHeight', 'cannot be negative');
-    }
-    return ImageSelectionOptions(
-        quality: imageQuality ?? 100, maxHeight: maxHeight, maxWidth: maxWidth);
+    _validateImageOptions(maxWidth: maxWidth, maxHeight: maxHeight, imageQuality: imageQuality);
+    return ImageSelectionOptions(quality: imageQuality ?? 100, maxHeight: maxHeight, maxWidth: maxWidth);
   }
 
   GeneralOptions _mediaOptionsToGeneralOptions(MediaOptions options) {
-    final bool allowMultiple = options.allowMultiple;
-    final int? limit = options.limit;
+    final allowMultiple = options.allowMultiple;
+    final limit = options.limit;
 
     if (!allowMultiple && limit != null) {
-      throw ArgumentError.value(
-        allowMultiple,
-        'allowMultiple',
-        'cannot be false, when limit is not null',
-      );
+      throw ArgumentError.value(allowMultiple, 'allowMultiple', 'cannot be false, when limit is not null');
     }
-
     if (limit != null && limit < 2) {
       throw ArgumentError.value(limit, 'limit', 'cannot be lower then 2');
     }
 
-    return GeneralOptions(
-      allowMultiple: allowMultiple,
-      usePhotoPicker: useOhosPhotoPicker,
-      limit: limit,
-    );
+    return GeneralOptions(allowMultiple: allowMultiple, usePhotoPicker: useOhosPhotoPicker, limit: limit);
   }
 
   @override
   Future<LostData> retrieveLostData() async {
-    final LostDataResponse result = await getLostData();
-
+    final result = await getLostData();
     if (result.isEmpty) {
       return LostData.empty();
     }
-
     return LostData(
       file: result.file != null ? PickedFile(result.file!.path) : null,
       exception: result.exception,
@@ -336,20 +266,19 @@ class ImagePickerHarmonyOS extends ImagePickerPlatform {
 
   @override
   Future<LostDataResponse> getLostData() async {
-    final CacheRetrievalResult? result = await _hostApi.retrieveLostResults();
-
+    final result = await _hostApi.retrieveLostResults();
     if (result == null) {
       return LostDataResponse.empty();
     }
 
-    assert(result.paths.isEmpty != (result.error == null));
+    final error = result.error;
+    if (error == null && result.paths.isEmpty) {
+      // 缓存中没有可用结果（例如只有类型、没有路径也没有错误），视为没有丢失数据。
+      return LostDataResponse.empty();
+    }
 
-    final CacheRetrievalError? error = result.error;
-    final PlatformException? exception = error == null
-        ? null
-        : PlatformException(code: error.code, message: error.message);
-    final List<XFile> pickedFileList =
-        result.paths.map((String? path) => XFile(path!)).toList();
+    final exception = error == null ? null : PlatformException(code: error.code, message: error.message);
+    final pickedFileList = _xFilesFromPaths(result.paths);
 
     return LostDataResponse(
       file: pickedFileList.isEmpty ? null : pickedFileList.last,
@@ -359,11 +288,8 @@ class ImagePickerHarmonyOS extends ImagePickerPlatform {
     );
   }
 
-  SourceSpecification _buildSourceSpec(
-      ImageSource source, CameraDevice device) {
-    return SourceSpecification(
-        type: _sourceSpecTypeForSource(source),
-        camera: _sourceSpecCameraForDevice(device));
+  SourceSpecification _buildSourceSpec(ImageSource source, CameraDevice device) {
+    return SourceSpecification(type: _sourceSpecTypeForSource(source), camera: _sourceSpecCameraForDevice(device));
   }
 
   SourceType _sourceSpecTypeForSource(ImageSource source) {

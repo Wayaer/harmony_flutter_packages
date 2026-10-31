@@ -1,6 +1,6 @@
 {
   "app": {
-    "bundleName": "com.image.picker.harmonyos.example",
+    "bundleName": "image.picker.example",
     "vendor": "example",
     "versionCode": 1000000,
     "versionName": "1.0.0",

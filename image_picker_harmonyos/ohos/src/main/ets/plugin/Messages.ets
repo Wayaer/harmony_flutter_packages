@@ -1,3 +1,9 @@
+// Copyright (c) 2023 Hunan OpenValley Digital Industry Development Co., Ltd.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE_ODID file.
+// Based on Messages.java originally written by
+// Copyright 2013 The Flutter Authors.
+
 import ArrayList from '@ohos.util.ArrayList';
 import StandardMessageCodec from '@ohos/flutter_ohos/src/main/ets/plugin/common/StandardMessageCodec';
 import { ByteBuffer } from '@ohos/flutter_ohos/src/main/ets/util/ByteBuffer';
@@ -5,6 +11,8 @@ import MessageCodec from '@ohos/flutter_ohos/src/main/ets/plugin/common/MessageC
 import { BinaryMessenger } from '@ohos/flutter_ohos/src/main/ets/plugin/common/BinaryMessenger';
 import BasicMessageChannel from '@ohos/flutter_ohos/src/main/ets/plugin/common/BasicMessageChannel';
 import Log from '@ohos/flutter_ohos/src/main/ets/util/Log';
+
+export const MAX_SELECT_NUMBER: number = 500;
 
 export enum SourceCamera {
   REAR = 0,
@@ -54,12 +62,14 @@ export class FlutterError extends Error {
 class GeneralOptionsBuilder {
   setAllowMultiple: (setterArg: boolean) => ESObject
   setUsePhotoPicker: (setterArg: boolean) => ESObject
+  setLimit:(setterArg: number) => ESObject
   build: () => ESObject
 
   constructor(setAllowMultiple: (setterArg: boolean) => ESObject, setUsePhotoPicker: (setterArg: boolean) => ESObject,
-    build: () => ESObject) {
+    setLimit: (setterArg: number) => ESObject, build: () => ESObject) {
     this.setAllowMultiple = setAllowMultiple
     this.setUsePhotoPicker = setUsePhotoPicker
+    this.setLimit = setLimit
     this.build = build
   }
 }
@@ -67,9 +77,20 @@ class GeneralOptionsBuilder {
 export class GeneralOptions {
   private allowMultiple: boolean = false;
   private usePhotoPicker: boolean = false;
-  private limit: number | null = null;
+  private limit: number = 1;
 
   private constructor() {
+  }
+
+  getLimit(): number {
+    if(this.limit !== null) {
+        return this.limit > MAX_SELECT_NUMBER ? MAX_SELECT_NUMBER : this.limit;
+    }
+    return MAX_SELECT_NUMBER;
+  }
+
+  setLimit(setterArg: number): void {
+    this.limit = setterArg ?? MAX_SELECT_NUMBER;
   }
 
   getAllowMultiple(): boolean {
@@ -87,19 +108,15 @@ export class GeneralOptions {
     return this.usePhotoPicker;
   }
 
+  getLimitfromOption(generalOptions: GeneralOptions): number {
+    return generalOptions.getLimit();
+  }
+
   setUsePhotoPicker(setterArg: boolean): void {
     if (setterArg == null) {
       throw new Error("Nonnull field \"usePhotoPicker\" is null.");
     }
     this.usePhotoPicker = setterArg;
-  }
-
-  getLimit() {
-    return this.limit ?? 1
-  }
-
-  setLimit(setterArg: number) {
-    this.limit = setterArg
   }
 
   public Builder: ESObject = new GeneralOptionsBuilder((setterArg: boolean) => {
@@ -108,10 +125,14 @@ export class GeneralOptions {
   }, (setterArg: boolean) => {
     this.usePhotoPicker = setterArg;
     return this;
+  }, (setterArg: number) => {
+    this.limit = setterArg;
+    return this;
   }, (): ESObject => {
     const pigeonReturn: ESObject = new GeneralOptions();
     pigeonReturn.setAllowMultiple(this.allowMultiple);
     pigeonReturn.setUsePhotoPicker(this.usePhotoPicker);
+    pigeonReturn.setLimit(this.limit);
     return pigeonReturn;
   }
   )
@@ -120,6 +141,7 @@ export class GeneralOptions {
     const toListResult: ArrayList<ESObject> = new ArrayList<ESObject>();
     toListResult.add(this.allowMultiple);
     toListResult.add(this.usePhotoPicker);
+    toListResult.add(this.limit);
     return toListResult;
   }
 
@@ -141,8 +163,7 @@ class ImageSelectionOptionsBuilder {
   setQuality: (setterArg: number) => ESObject
   build: () => ESObject
 
-  constructor(setMaxWidth: (setterArg: number) => ESObject, setMaxHeight: (setterArg: number) => ESObject,
-    setQuality: (setterArg: number) => ESObject, build: () => ESObject) {
+  constructor(setMaxWidth: (setterArg: number) => ESObject, setMaxHeight: (setterArg: number) => ESObject, setQuality: (setterArg: number) => ESObject, build: () => ESObject) {
     this.setMaxWidth = setMaxWidth
     this.setMaxHeight = setMaxHeight
     this.setQuality = setQuality
@@ -337,8 +358,7 @@ class SourceSpecificationBuilder {
   setCamera: (setterArg: SourceCamera) => ESObject
   build: () => ESObject
 
-  constructor(setType: (setterArg: SourceType) => ESObject, setCamera: (setterArg: SourceCamera) => ESObject,
-    build: () => ESObject) {
+  constructor(setType: (setterArg: SourceType) => ESObject, setCamera: (setterArg: SourceCamera) => ESObject, build: () => ESObject) {
     this.setType = setType
     this.setCamera = setCamera
     this.build = build
@@ -410,8 +430,7 @@ export class CacheRetrievalErrorBuilder {
   setMessage: ((setterArg: string) => ESObject) | null
   build: (() => ESObject) | null
 
-  constructor(setCode: null | ((setterArg: string) => ESObject), setMessage: ((setterArg: string) => ESObject) | null,
-    build: (() => ESObject) | null) {
+  constructor(setCode: null | ((setterArg: string) => ESObject), setMessage: ((setterArg: string) => ESObject) | null, build: (() => ESObject) | null) {
     this.setCode = setCode
     this.setMessage = setMessage
     this.build = build
@@ -487,9 +506,7 @@ export class CacheRetrievalResultBuilder {
   setPaths: ((setterArg: ArrayList<string>) => ESObject) | null
   build: (() => ESObject) | null
 
-  constructor(setType: ((setterArg: CacheRetrievalType) => ESObject) | null,
-    setError: ((setterArg: CacheRetrievalError) => ESObject) | null,
-    setPaths: ((setterArg: ArrayList<string>) => ESObject) | null, build: (() => ESObject) | null) {
+  constructor(setType: ((setterArg: CacheRetrievalType) => ESObject) | null, setError: ((setterArg: CacheRetrievalError) => ESObject) | null, setPaths: ((setterArg: ArrayList<string>) => ESObject) | null, build: (() => ESObject) | null) {
     this.setType = setType
     this.setError = setError
     this.setPaths = setPaths
@@ -559,8 +576,7 @@ export class CacheRetrievalResult {
   toList(): ArrayList<ESObject> {
     const toListResult: ArrayList<ESObject> = new ArrayList<ESObject>();
     toListResult.add(this.type);
-    let t = new CacheRetrievalResult()
-    toListResult.add(this.error == null ? null : t.error ? t.error.toList() : "");
+    toListResult.add(this.error == null ? null : this.error.toList());
     toListResult.add(this.paths);
     return toListResult;
   }
@@ -624,16 +640,16 @@ export class ImagePickerApiCodec extends StandardMessageCodec {
       stream.writeInt8(129);
       super.writeValue(stream, value.toList());
     } else if (value instanceof GeneralOptions) {
-      stream.writeInt8(129);
-      super.writeValue(stream, value.toList());
-    } else if (value instanceof ImageSelectionOptions) {
       stream.writeInt8(130);
       super.writeValue(stream, value.toList());
-    } else if (value instanceof MediaSelectionOptions) {
+    } else if (value instanceof ImageSelectionOptions) {
       stream.writeInt8(131);
       super.writeValue(stream, value.toList());
-    } else if (value instanceof SourceSpecification) {
+    } else if (value instanceof MediaSelectionOptions) {
       stream.writeInt8(132);
+      super.writeValue(stream, value.toList());
+    } else if (value instanceof SourceSpecification) {
+      stream.writeInt8(133);
       super.writeValue(stream, value.toList());
     } else if (value instanceof VideoSelectionOptions) {
       stream.writeInt8(134);
@@ -672,15 +688,18 @@ export abstract class ImagePickerApi {
     if (!binaryMessenger) {
       return
     }
+    Log.i(TAG, "setup");
+
     {
       const channel: BasicMessageChannel<ESObject> =
-        new BasicMessageChannel<ESObject>(
-          binaryMessenger,
-          "dev.flutter.pigeon.ImagePickerApi.pickImages",
-          ImagePickerApi.getCodec());
+      new BasicMessageChannel<ESObject>(
+        binaryMessenger,
+        "dev.flutter.pigeon.image_picker_ohos.ImagePickerApi.pickImages",
+        ImagePickerApi.getCodec());
       if (api != null) {
         channel.setMessageHandler({
           onMessage: (message: ESObject, reply: ESObject) => {
+            Log.i(TAG, "setup on message : " + message);
             const wrapped: ArrayList<ESObject> = new ArrayList<ESObject>();
             const args: Array<ESObject> = message;
             const sourceArg: SourceSpecification = args[0];
@@ -703,10 +722,10 @@ export abstract class ImagePickerApi {
     }
     {
       const channel: BasicMessageChannel<ESObject> =
-        new BasicMessageChannel<ESObject>(
-          binaryMessenger,
-          "dev.flutter.pigeon.ImagePickerApi.pickVideos",
-          ImagePickerApi.getCodec());
+      new BasicMessageChannel<ESObject>(
+        binaryMessenger,
+        "dev.flutter.pigeon.image_picker_ohos.ImagePickerApi.pickVideos",
+        ImagePickerApi.getCodec());
       if (api != null) {
         channel.setMessageHandler({
           onMessage: (message: ESObject, reply: ESObject) => {
@@ -731,10 +750,10 @@ export abstract class ImagePickerApi {
     }
     {
       const channel: BasicMessageChannel<ESObject> =
-        new BasicMessageChannel<ESObject>(
-          binaryMessenger,
-          "dev.flutter.pigeon.ImagePickerApi.pickMedia",
-          ImagePickerApi.getCodec());
+      new BasicMessageChannel<ESObject>(
+        binaryMessenger,
+        "dev.flutter.pigeon.image_picker_ohos.ImagePickerApi.pickMedia",
+        ImagePickerApi.getCodec());
       if (api != null) {
         channel.setMessageHandler({
           onMessage: (message: ESObject, reply: ESObject) => {
@@ -758,10 +777,10 @@ export abstract class ImagePickerApi {
     }
     {
       const channel: BasicMessageChannel<ESObject> =
-        new BasicMessageChannel<ESObject>(
-          binaryMessenger,
-          "dev.flutter.pigeon.ImagePickerApi.retrieveLostResults",
-          ImagePickerApi.getCodec());
+      new BasicMessageChannel<ESObject>(
+        binaryMessenger,
+        "dev.flutter.pigeon.image_picker_ohos.ImagePickerApi.retrieveLostResults",
+        ImagePickerApi.getCodec());
       if (api != null) {
         channel.setMessageHandler({
           onMessage: async (message: ESObject, reply: ESObject) => {
