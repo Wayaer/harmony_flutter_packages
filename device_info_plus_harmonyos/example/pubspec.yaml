@@ -3,13 +3,14 @@ description: "Demonstrates how to use the device_info_plus_harmonyos plugin."
 publish_to: 'none'
 
 environment:
-  sdk: ^3.6.2
+  sdk: ^3.9.0
+  flutter: ">=3.35.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  device_info_plus_harmonyos:
-    path: ../
+  device_info_plus: ^13.3.0
+  device_info_plus_harmonyos: ^13.3.0
 
 dev_dependencies:
   flutter_lints: ^5.0.0

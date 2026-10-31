@@ -1,45 +1,30 @@
-<p align="center">
-  <h1 align="center"> <code>device_info_plus_harmonyos</code> </h1>
-</p>
+# device_info_plus_harmonyos
 
-## 1. 安装与使用
+`device_info_plus` 的鸿蒙（OpenHarmony / HarmonyOS）平台实现，兼容 Flutter 插件 `device_info_plus 13.3.0`。
 
-### 1.1 安装方式
-
-进入到工程目录并在 pubspec.yaml 中添加以下依赖：
-
-<!-- tabs:start -->
-
-#### pubspec.yaml
+## 安装与使用
 
 ```yaml
-...
-
 dependencies:
-  device_info_plus_harmonyos: ^0.0.1
-...
+  device_info_plus: ^13.3.0
+  device_info_plus_harmonyos: ^13.3.0
 ```
 
 ```dart
 import 'package:device_info_plus_harmonyos/device_info_plus_harmonyos.dart';
+
+final DeviceInfoPlusOhosPlugin deviceInfo = DeviceInfoPlusOhosPlugin();
+final OhosDeviceInfo info = await deviceInfo.ohosInfo;
+print(info.osFullName);
+print(info.productModel);
 ```
 
-执行命令
+## 鸿蒙平台限制
 
-```bash
-flutter pub get
-```
+- `serial`、`udid` 需要系统级权限 `ohos.permission.sec.ACCESS_UDID`，普通应用无法获取。
+- `hardwareProfile` 在 API 9 之后已废弃，不同系统版本可能返回空值。
 
-<!-- tabs:end -->
+## 兼容版本
 
-### 1.2 使用案例
-
-使用案例详见 [device_info_plus_harmonyos](./example)
-
-## 2. 约束与限制
-
-### 2.1 兼容性
-
-在以下版本中已测试通过
-
-1. Flutter: 3.27.4-dev; SDK: 5.0.0(12); IDE: DevEco Studio: 5.0.13.200; ROM: 5.1.0.120 SP3;
+- 对应上游 Flutter 插件版本：`device_info_plus 13.3.0`
+- 平台接口依赖：`device_info_plus_platform_interface: ^8.1.0`

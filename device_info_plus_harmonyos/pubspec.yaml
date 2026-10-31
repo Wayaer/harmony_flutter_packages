@@ -1,17 +1,23 @@
 name: device_info_plus_harmonyos
-description: "HarmonyOS implementation of the device_info_plus plugin."
-version: 0.0.5
+description: "HarmonyOS (OpenHarmony) platform implementation of the device_info_plus Flutter plugin."
+version: 13.3.0
 repository: https://github.com/Wayaer/harmony_flutter_packages/tree/main/device_info_plus_harmonyos
+issue_tracker: https://github.com/Wayaer/harmony_flutter_packages/issues
+topics:
+  - flutter
+  - harmonyos
+  - ohos
+  - device-info
 
 environment:
-  sdk: '>=3.6.2 <4.0.0'
-  flutter: '>=3.27.0'
+  sdk: ">=3.10.0 <4.0.0"
+  flutter: ">=3.38.1"
 
 dependencies:
   flutter:
     sdk: flutter
-  device_info_plus: '>=11.0.0 <14.0.0'
-  device_info_plus_platform_interface: '>=7.0.0 <=8.0.0'
+  device_info_plus: ^13.3.0
+  device_info_plus_platform_interface: ^8.1.0
 
 dev_dependencies:
   flutter_lints: ^5.0.0

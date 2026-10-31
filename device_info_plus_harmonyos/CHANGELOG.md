@@ -1,18 +1,12 @@
+## 13.3.0
+
+* 适配上游 `device_info_plus 13.3.0`，平台接口依赖对齐 `device_info_plus_platform_interface ^8.1.0`。
+
+## 12.3.0
+
+* 适配上游 `device_info_plus 12.3.0`，平台接口依赖 `device_info_plus_platform_interface ^7.0.3`。
+* 新增 `serial` / `udid` 读取（需要系统级权限 `ohos.permission.sec.ACCESS_UDID`）与模拟器判断。
+
 ## 0.0.5
 
-* Add `isPhysicalDevice`
-
-## 0.0.3
-
-* Update the `device_info_plus_platform_interface` dependency to `>=7.0.0 <=8.0.0`
-* Update the `device_info_plus` dependency to `>=11.0.0 <14.0.0`
-*
-
-## 0.0.2
-
-* Add the `toMap` and `data` methods to `HarmonyOSDeviceInfo`
-
-## 0.0.1
-
-* Initialize device_info_plus_harmonyos
-
+* Support OpenHarmony device info.
