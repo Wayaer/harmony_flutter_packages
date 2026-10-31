@@ -1,18 +1,29 @@
+/*
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import StandardMessageCodec from '@ohos/flutter_ohos/src/main/ets/plugin/common/StandardMessageCodec';
 import BasicMessageChannel, { Reply } from '@ohos/flutter_ohos/src/main/ets/plugin/common/BasicMessageChannel';
-import { BinaryMessenger } from '@ohos/flutter_ohos/src/main/ets/plugin/common/BinaryMessenger';
+import { BinaryMessenger, TaskQueue } from '@ohos/flutter_ohos/src/main/ets/plugin/common/BinaryMessenger';
 import MessageCodec from '@ohos/flutter_ohos/src/main/ets/plugin/common/MessageCodec';
 import { ByteBuffer } from '@ohos/flutter_ohos/src/main/ets/util/ByteBuffer';
+import { HashMap } from '@kit.ArkTS';
 
-/** Error class for passing custom error details to Flutter via a thrown PlatformException. */
 export class FlutterError implements Error {
-  /** The error code. */
   public code: string;
-  /** The error name. */
   public name: string;
-  /** The error message. */
   public message: string;
-  /** The error stack. */
   public stack?: string;
 
   constructor(code: string, name: string, message: string, stack: string) {
@@ -38,13 +49,8 @@ function wrapError(error: Error): Array<Object> {
   return errorList;
 }
 
-/*
-*  Message for toggling the wakelock on the platform side.
-* 
-*  Generated class from Pigeon that represents data sent in messages.
-*/
 export class ToggleMessage {
-  private enable: boolean = false;
+  private enable: boolean;
 
   getEnable(): boolean {
     return this.enable;
@@ -61,18 +67,14 @@ export class ToggleMessage {
   }
 
   static fromList(message: Object): ToggleMessage {
-    let list: Array<Object> = message as Array<Object>;
-    return new ToggleMessage(list[0] as boolean);
+    let  list:Array<Object> = message as Array<Object>;
+    let instance: ToggleMessage = new ToggleMessage(list[0] as boolean);
+    return instance;
   }
 }
 
-/*
-*  Message for reporting the wakelock state from the platform side.
-*
-*  Generated class from Pigeon that represents data sent in messages.
-*/
 export class IsEnabledMessage {
-  private enabled: boolean = false;
+  private enabled: boolean;
 
   getEnabled(): boolean {
     return this.enabled;
@@ -90,25 +92,20 @@ export class IsEnabledMessage {
 
   static fromList(message: Object): IsEnabledMessage {
     let list: Array<Object> = message as Array<Object>;
-    return new IsEnabledMessage(list[0] as boolean);
+    let instance: IsEnabledMessage = new IsEnabledMessage(list[0] as boolean);
+    return instance;
   }
 }
 
 class WakelockApiCodec extends StandardMessageCodec {
   static INSTANCE: WakelockApiCodec = new WakelockApiCodec();
 
-  getByte(n: number): number {
-    let byteArray = new Uint8Array(1);
-    byteArray[0] = n;
-    return byteArray[0] as number;
-  }
-
   readValueOfType(type: number, buffer: ByteBuffer): ESObject {
     switch (type) {
-      case this.getByte(130):
-        return IsEnabledMessage.fromList(super.readValue(buffer));
-      case this.getByte(129):
+      case 129:
         return ToggleMessage.fromList(super.readValue(buffer));
+      case 130:
+        return IsEnabledMessage.fromList(super.readValue(buffer));
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -116,11 +113,11 @@ class WakelockApiCodec extends StandardMessageCodec {
 
   writeValue(stream: ByteBuffer, value: ESObject): ESObject {
     if (value instanceof IsEnabledMessage) {
-      stream.writeInt8(this.getByte(130));
-      super.writeValue(stream, (value as IsEnabledMessage).toList());
+      stream.writeInt8(130);
+      this.writeValue(stream, (value as IsEnabledMessage).toList());
     } else if (value instanceof ToggleMessage) {
-      stream.writeInt8(this.getByte(129));
-      super.writeValue(stream, (value as ToggleMessage).toList());
+      stream.writeInt8(129);
+      this.writeValue(stream, (value as ToggleMessage).toList());
     } else {
       super.writeValue(stream, value);
     }
@@ -133,27 +130,25 @@ export abstract class WakelockApi {
 
   abstract isEnabled(): Promise<IsEnabledMessage>;
 
-  /** The codec used by WakelockApi. */
   static getCodec(): MessageCodec<Object> {
     return WakelockApiCodec.INSTANCE;
   }
 
-  /*Sets up an instance of `WakelockApi` to handle messages through the `binaryMessenger`.*/
   static setup(binaryMessenger: BinaryMessenger, api: WakelockApi | null): void {
     {
       let channel: BasicMessageChannel<Object> =
         new BasicMessageChannel(
-          binaryMessenger, "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle",
-          WakelockApi.getCodec());
+          binaryMessenger, "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle", WakelockApi.getCodec());
       if (api != null) {
         channel.setMessageHandler({
           async onMessage(message: Object, reply: Reply<Object>) {
             let args: Array<Object> = message as Array<Object>;
-            let res: Array<Object | null> = [];
+            let res: Array<Object> = [];
             try {
               await api!.toggle(args[0] as ToggleMessage);
               res.push(null);
-            } catch (error) {
+            }
+            catch (error) {
               let wrappedError: Array<Object> = wrapError(error);
               res = wrappedError;
             }
@@ -167,15 +162,15 @@ export abstract class WakelockApi {
     {
       let channel: BasicMessageChannel<Object> =
         new BasicMessageChannel(
-          binaryMessenger, "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.isEnabled",
-          WakelockApi.getCodec());
+          binaryMessenger, "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.isEnabled", WakelockApi.getCodec());
       if (api != null) {
         channel.setMessageHandler({
           async onMessage(message: Object, reply: Reply<Object>) {
             try {
               let output: IsEnabledMessage = await api!.isEnabled();
               reply.reply([output]);
-            } catch (error) {
+            }
+            catch (error) {
               let wrappedError: Array<Object> = wrapError(error);
               reply.reply(wrappedError);
             }

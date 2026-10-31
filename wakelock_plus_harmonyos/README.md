@@ -1,42 +1,32 @@
-<p align="center">
-  <h1 align="center"> <code>wakelock_plus_harmonyos</code> </h1>
-</p>
+# wakelock_plus_harmonyos
 
-## 1. 安装与使用
+`wakelock_plus` 的鸿蒙（OpenHarmony / HarmonyOS）平台实现，兼容 Flutter 插件 `wakelock_plus 1.8.2`。
 
-### 1.1 安装方式
-
-进入到工程目录并在 pubspec.yaml 中添加以下依赖：
-
-<!-- tabs:start -->
-
-#### pubspec.yaml
+## 安装与使用
 
 ```yaml
-...
-
 dependencies:
-  wakelock_plus: ^1.3.2
-  wakelock_plus_harmonyos: ^0.0.1
-...
+  wakelock_plus: ^1.8.2
+  wakelock_plus_harmonyos: ^1.8.2
 ```
 
-执行命令
+```dart
+import 'package:wakelock_plus/wakelock_plus.dart';
 
-```bash
-flutter pub get
+await WakelockPlus.enable();
+await WakelockPlus.disable();
+await WakelockPlus.toggle(enable: true);
+
+final bool enabled = await WakelockPlus.enabled;
 ```
 
-<!-- tabs:end -->
+## 鸿蒙平台限制
 
-### 1.2 使用案例
+- 常亮状态作用于当前窗口，应用退到后台后由系统策略接管。
+- 部分设备在熄屏策略下仍可能自动锁屏，与系统省电设置有关。
+- 运行环境要求：Flutter `>=3.44.0`、Dart `>=3.12.0`（由上游 `wakelock_plus 1.8.2` 与平台接口要求）。
 
-使用案例详见 [wakelock_plus_harmonyos](./example)
+## 兼容版本
 
-## 2. 约束与限制
-
-### 2.1 兼容性
-
-在以下版本中已测试通过
-
-1. Flutter: 3.27.4-dev; SDK: 5.0.0(12); IDE: DevEco Studio: 5.0.13.200; ROM: 5.1.0.120 SP3;
+- 对应上游 Flutter 插件版本：`wakelock_plus 1.8.2`
+- 平台接口依赖：`wakelock_plus_platform_interface: ^1.7.0`

@@ -3,14 +3,14 @@ description: "Demonstrates how to use the wakelock_plus_harmonyos plugin."
 publish_to: 'none'
 
 environment:
-  sdk: ^3.6.2
+  sdk: ^3.12.0
+  flutter: ">=3.44.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  wakelock_plus: ^1.3.2
-  wakelock_plus_harmonyos:
-    path: ../
+  wakelock_plus: ^1.8.2
+  wakelock_plus_harmonyos: ^1.8.2
 
 dev_dependencies:
   flutter_lints: ^5.0.0

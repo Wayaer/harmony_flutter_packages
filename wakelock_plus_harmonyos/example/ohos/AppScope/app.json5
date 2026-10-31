@@ -1,6 +1,6 @@
 {
   "app": {
-    "bundleName": "com.wakelock.plus.harmonyos.example",
+    "bundleName": "wakelock.plus.example",
     "vendor": "example",
     "versionCode": 1000000,
     "versionName": "1.0.0",

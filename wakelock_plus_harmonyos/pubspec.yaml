@@ -1,16 +1,23 @@
 name: wakelock_plus_harmonyos
-description: "HarmonyOS implementation of the wakelock_plus plugin."
-version: 0.0.1
-repository: https://github.com/Wayaer/harmony_flutter_packages/tree/main/file_selector_harmonyos
+description: "HarmonyOS (OpenHarmony) platform implementation of the wakelock_plus Flutter plugin."
+version: 1.8.2
+repository: https://github.com/Wayaer/harmony_flutter_packages/tree/main/wakelock_plus_harmonyos
+issue_tracker: https://github.com/Wayaer/harmony_flutter_packages/issues
+topics:
+  - flutter
+  - harmonyos
+  - ohos
+  - wakelock
+  - screen
 
 environment:
-  sdk: '>=3.6.2 <4.0.0'
-  flutter: '>=3.27.0'
+  sdk: ^3.12.0
+  flutter: ">=3.44.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  wakelock_plus_platform_interface: ^1.2.3
+  wakelock_plus_platform_interface: ^1.7.0
 
 dev_dependencies:
   flutter_lints: ^5.0.0
