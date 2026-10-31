@@ -2,6 +2,28 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 
+enum FileSelectorExceptionCode { securityException, ioException, illegalArgumentException, illegalStateException }
+
+class FileSelectorNativeException {
+  FileSelectorNativeException({required this.fileSelectorExceptionCode, required this.message});
+
+  FileSelectorExceptionCode fileSelectorExceptionCode;
+
+  String message;
+
+  Object encode() {
+    return <Object?>[fileSelectorExceptionCode.index, message];
+  }
+
+  static FileSelectorNativeException decode(Object result) {
+    result as List<Object?>;
+    return FileSelectorNativeException(
+      fileSelectorExceptionCode: FileSelectorExceptionCode.values[result[0]! as int],
+      message: result[1]! as String,
+    );
+  }
+}
+
 class FileResponse {
   FileResponse({
     required this.path,
@@ -9,6 +31,7 @@ class FileResponse {
     this.name,
     required this.size,
     required this.bytes,
+    this.fileSelectorNativeException,
   });
 
   String path;
@@ -21,14 +44,10 @@ class FileResponse {
 
   Uint8List bytes;
 
+  FileSelectorNativeException? fileSelectorNativeException;
+
   Object encode() {
-    return <Object?>[
-      path,
-      mimeType,
-      name,
-      size,
-      bytes,
-    ];
+    return <Object?>[path, mimeType, name, size, bytes, fileSelectorNativeException];
   }
 
   static FileResponse decode(Object result) {
@@ -39,25 +58,20 @@ class FileResponse {
       name: result[2] as String?,
       size: result[3]! as int,
       bytes: result[4]! as Uint8List,
+      fileSelectorNativeException: result.length > 5 ? result[5] as FileSelectorNativeException? : null,
     );
   }
 }
 
 class FileTypes {
-  FileTypes({
-    required this.mimeTypes,
-    required this.extensions,
-  });
+  FileTypes({required this.mimeTypes, required this.extensions});
 
   List<String?> mimeTypes;
 
   List<String?> extensions;
 
   Object encode() {
-    return <Object?>[
-      mimeTypes,
-      extensions,
-    ];
+    return <Object?>[mimeTypes, extensions];
   }
 
   static FileTypes decode(Object result) {
@@ -80,6 +94,9 @@ class _FileSelectorApiCodec extends StandardMessageCodec {
     } else if (value is FileTypes) {
       buffer.putUint8(129);
       writeValue(buffer, value.encode());
+    } else if (value is FileSelectorNativeException) {
+      buffer.putUint8(130);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -92,71 +109,48 @@ class _FileSelectorApiCodec extends StandardMessageCodec {
         return FileResponse.decode(readValue(buffer)!);
       case 129:
         return FileTypes.decode(readValue(buffer)!);
+      case 130:
+        return FileSelectorNativeException.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
   }
 }
 
-/// An API to call to native code to select files or directories.
 class FileSelectorApi {
-  /// Constructor for [FileSelectorApi].  The [binaryMessenger] named argument is
-  /// available for dependency injection.  If it is left null, the default
-  /// BinaryMessenger will be used which routes to the host platform.
-  FileSelectorApi({BinaryMessenger? binaryMessenger})
-      : _binaryMessenger = binaryMessenger;
+  FileSelectorApi({BinaryMessenger? binaryMessenger}) : _binaryMessenger = binaryMessenger;
+
   final BinaryMessenger? _binaryMessenger;
 
   static const MessageCodec<Object?> codec = _FileSelectorApiCodec();
 
-  /// Opens a file dialog for loading files and returns a file path.
-  ///
-  /// Returns `null` if user cancels the operation.
-  Future<FileResponse?> openFile(
-      String? argInitialDirectory, FileTypes argAllowedTypes) async {
-    final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.FileSelectorApi.openFile', codec,
-        binaryMessenger: _binaryMessenger);
-    final List<Object?>? replyList =
-        await channel.send(<Object?>[argInitialDirectory, argAllowedTypes])
-            as List<Object?>?;
+  Future<FileResponse?> openFile(String? initialDirectory, FileTypes allowedTypes) async {
+    final channel = BasicMessageChannel<Object?>(
+      'dev.flutter.pigeon.FileSelectorApi.openFile',
+      codec,
+      binaryMessenger: _binaryMessenger,
+    );
+    final replyList = await channel.send(<Object?>[initialDirectory, allowedTypes]) as List<Object?>?;
     if (replyList == null) {
-      throw PlatformException(
-        code: 'channel-error',
-        message: 'Unable to establish connection on channel.',
-      );
+      throw PlatformException(code: 'channel-error', message: 'Unable to establish connection on channel.');
     } else if (replyList.length > 1) {
-      throw PlatformException(
-        code: replyList[0]! as String,
-        message: replyList[1] as String?,
-        details: replyList[2],
-      );
+      throw PlatformException(code: replyList[0]! as String, message: replyList[1] as String?, details: replyList[2]);
     } else {
-      return (replyList[0] as FileResponse?);
+      return replyList[0] as FileResponse?;
     }
   }
 
-  /// Opens a file dialog for loading files and returns a list of file responses
-  /// chosen by the user.
-  Future<List<FileResponse?>> openFiles(
-      String? argInitialDirectory, FileTypes argAllowedTypes) async {
-    final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.FileSelectorApi.openFiles', codec,
-        binaryMessenger: _binaryMessenger);
-    final List<Object?>? replyList =
-        await channel.send(<Object?>[argInitialDirectory, argAllowedTypes])
-            as List<Object?>?;
+  Future<List<FileResponse?>> openFiles(String? initialDirectory, FileTypes allowedTypes) async {
+    final channel = BasicMessageChannel<Object?>(
+      'dev.flutter.pigeon.FileSelectorApi.openFiles',
+      codec,
+      binaryMessenger: _binaryMessenger,
+    );
+    final replyList = await channel.send(<Object?>[initialDirectory, allowedTypes]) as List<Object?>?;
     if (replyList == null) {
-      throw PlatformException(
-        code: 'channel-error',
-        message: 'Unable to establish connection on channel.',
-      );
+      throw PlatformException(code: 'channel-error', message: 'Unable to establish connection on channel.');
     } else if (replyList.length > 1) {
-      throw PlatformException(
-        code: replyList[0]! as String,
-        message: replyList[1] as String?,
-        details: replyList[2],
-      );
+      throw PlatformException(code: replyList[0]! as String, message: replyList[1] as String?, details: replyList[2]);
     } else if (replyList[0] == null) {
       throw PlatformException(
         code: 'null-error',
@@ -167,28 +161,56 @@ class FileSelectorApi {
     }
   }
 
-  /// Opens a file dialog for loading directories and returns a directory path.
-  ///
-  /// Returns `null` if user cancels the operation.
-  Future<String?> getDirectoryPath(String? argInitialDirectory) async {
-    final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.FileSelectorApi.getDirectoryPath', codec,
-        binaryMessenger: _binaryMessenger);
-    final List<Object?>? replyList =
-        await channel.send(<Object?>[argInitialDirectory]) as List<Object?>?;
+  Future<String?> getDirectoryPath(String? initialDirectory) async {
+    final channel = BasicMessageChannel<Object?>(
+      'dev.flutter.pigeon.FileSelectorApi.getDirectoryPath',
+      codec,
+      binaryMessenger: _binaryMessenger,
+    );
+    final replyList = await channel.send(<Object?>[initialDirectory]) as List<Object?>?;
     if (replyList == null) {
-      throw PlatformException(
-        code: 'channel-error',
-        message: 'Unable to establish connection on channel.',
-      );
+      throw PlatformException(code: 'channel-error', message: 'Unable to establish connection on channel.');
     } else if (replyList.length > 1) {
+      throw PlatformException(code: replyList[0]! as String, message: replyList[1] as String?, details: replyList[2]);
+    } else {
+      return replyList[0] as String?;
+    }
+  }
+
+  Future<List<String>> getDirectoryPaths(String? initialDirectory) async {
+    final channel = BasicMessageChannel<Object?>(
+      'dev.flutter.pigeon.FileSelectorApi.getDirectoryPaths',
+      codec,
+      binaryMessenger: _binaryMessenger,
+    );
+    final replyList = await channel.send(<Object?>[initialDirectory]) as List<Object?>?;
+    if (replyList == null) {
+      throw PlatformException(code: 'channel-error', message: 'Unable to establish connection on channel.');
+    } else if (replyList.length > 1) {
+      throw PlatformException(code: replyList[0]! as String, message: replyList[1] as String?, details: replyList[2]);
+    } else if (replyList[0] == null) {
       throw PlatformException(
-        code: replyList[0]! as String,
-        message: replyList[1] as String?,
-        details: replyList[2],
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
       );
     } else {
-      return (replyList[0] as String?);
+      return (replyList[0] as List<Object?>?)!.cast<String>();
+    }
+  }
+
+  Future<String?> getSavePath(String? initialDirectory, String? suggestedName, FileTypes allowedTypes) async {
+    final channel = BasicMessageChannel<Object?>(
+      'dev.flutter.pigeon.FileSelectorApi.getSavePath',
+      codec,
+      binaryMessenger: _binaryMessenger,
+    );
+    final replyList = await channel.send(<Object?>[initialDirectory, suggestedName, allowedTypes]) as List<Object?>?;
+    if (replyList == null) {
+      throw PlatformException(code: 'channel-error', message: 'Unable to establish connection on channel.');
+    } else if (replyList.length > 1) {
+      throw PlatformException(code: replyList[0]! as String, message: replyList[1] as String?, details: replyList[2]);
+    } else {
+      return replyList[0] as String?;
     }
   }
 }

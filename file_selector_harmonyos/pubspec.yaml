@@ -1,16 +1,23 @@
 name: file_selector_harmonyos
-description: "HarmonyOS implementation of the file_selector plugin."
-version: 0.0.1
+description: "HarmonyOS (OpenHarmony) platform implementation of the file_selector Flutter plugin."
+version: 1.1.0
 repository: https://github.com/Wayaer/harmony_flutter_packages/tree/main/file_selector_harmonyos
+issue_tracker: https://github.com/Wayaer/harmony_flutter_packages/issues
+topics:
+  - flutter
+  - harmonyos
+  - ohos
+  - files
+  - file-picker
 
 environment:
-  sdk: '>=3.6.2 <4.0.0'
-  flutter: '>=3.27.0'
+  sdk: ^3.9.0
+  flutter: ">=3.35.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  file_selector_platform_interface: ^2.6.2
+  file_selector_platform_interface: ^2.7.0
 
 dev_dependencies:
   flutter_lints: ^5.0.0
@@ -21,4 +28,4 @@ flutter:
     platforms:
       ohos:
         pluginClass: FileSelectorPlugin
-        dartPluginClass: FileSelectorHarmonyOS
+        dartPluginClass: FileSelectorOhos

@@ -1,10 +1,44 @@
 import { ByteBuffer } from '@ohos/flutter_ohos/src/main/ets/util/ByteBuffer';
 import StandardMessageCodec from '@ohos/flutter_ohos/src/main/ets/plugin/common/StandardMessageCodec';
+import Log from '@ohos/flutter_ohos/src/main/ets/util/Log';
+
+const TAG = "GeneratedFileSelectorApi";
+
+export const FILE_SELECTOR_EXCEPTION_PLACEHOLDER_PATH: string = 'FILE_SELECTOR_EXCEPTION';
+
+export enum FileSelectorExceptionCode {
+  SECURITY_EXCEPTION = 0,
+  IO_EXCEPTION = 1,
+  ILLEGAL_ARGUMENT_EXCEPTION = 2,
+  ILLEGAL_STATE_EXCEPTION = 3,
+}
+
+export class FileSelectorNativeException {
+  fileSelectorExceptionCode: FileSelectorExceptionCode;
+  message: string;
+
+  constructor(fileSelectorExceptionCode: FileSelectorExceptionCode, message: string) {
+    this.fileSelectorExceptionCode = fileSelectorExceptionCode;
+    this.message = message;
+  }
+
+  toList(): Array<ESObject> {
+    const toListResult: Array<ESObject> = new Array<ESObject>();
+    toListResult.push(this.fileSelectorExceptionCode);
+    toListResult.push(this.message);
+    return toListResult;
+  }
+
+  static fromList(list: Array<ESObject>): FileSelectorNativeException {
+    const code: number = list[0] as number;
+    const message: string = list[1] as string;
+    return new FileSelectorNativeException(code as FileSelectorExceptionCode, message);
+  }
+}
 
 class FlutterError extends Error {
-  /** The error code. */
   public code: string;
-  /** The error details. Must be a datatype supported by the api codec. */
+
   public details: ESObject;
 
   constructor(code: string, message: string, details: ESObject) {
@@ -24,8 +58,7 @@ export function wrapError(exception: Error): Array<ESObject> {
   } else {
     errorList.push(exception.toString());
     errorList.push(exception.name);
-    errorList.push(
-      "Cause: " + exception.message + ", Stacktrace: " + exception.stack);
+    errorList.push("Cause: " + exception.message + ", Stacktrace: " + exception.stack);
   }
   return errorList;
 }
@@ -90,13 +123,30 @@ export class FileResponse {
     this.bytes = setterArg;
   }
 
+  private fileSelectorNativeException: FileSelectorNativeException | null = null;
 
-  constructor(path: string, mimeType: string, name: string, size: number, bytes: Uint8Array) {
+  public getFileSelectorNativeException(): FileSelectorNativeException | null {
+    return this.fileSelectorNativeException;
+  }
+
+  public setFileSelectorNativeException(setterArg: FileSelectorNativeException | null): void {
+    this.fileSelectorNativeException = setterArg;
+  }
+
+  constructor(
+    path: string,
+    mimeType: string,
+    name: string,
+    size: number,
+    bytes: Uint8Array,
+    fileSelectorNativeException: FileSelectorNativeException | null = null
+  ) {
     this.path = path;
     this.mimeType = mimeType;
     this.name = name;
     this.size = size;
     this.bytes = bytes;
+    this.fileSelectorNativeException = fileSelectorNativeException;
   }
 
   toList(): Array<ESObject> {
@@ -106,6 +156,7 @@ export class FileResponse {
     toListResult.push(this.name);
     toListResult.push(this.size);
     toListResult.push(this.bytes);
+    toListResult.push(this.fileSelectorNativeException);
     return toListResult;
   }
 
@@ -115,7 +166,11 @@ export class FileResponse {
     let name: ESObject = list[2];
     let size: ESObject = list[3];
     let bytes: ESObject = list[4];
-    let response = new FileResponse(path, mimeType, name, size, bytes);
+    let fileSelectorNativeException: FileSelectorNativeException | null = null;
+    if (list.length > 5 && list[5] != null) {
+      fileSelectorNativeException = list[5] as FileSelectorNativeException;
+    }
+    let response = new FileResponse(path, mimeType, name, size, bytes, fileSelectorNativeException);
     return response;
   }
 }
@@ -147,7 +202,6 @@ export class FileTypes {
     this.extensions = setterArg;
   }
 
-  /** Constructor is non-public to enforce null safety; use Builder. */
   FileTypes() {
   }
 
@@ -164,19 +218,21 @@ export class FileTypes {
     pigeonResult.setMimeTypes(mimeTypes as Array<string>);
     let extensions: ESObject = list[1];
     pigeonResult.setExtensions(extensions as Array<string>);
+    Log.d(TAG, 'readValueOfType fromList  mimeTypes:' + mimeTypes + '  extensions:' + pigeonResult.getExtensions())
     return pigeonResult;
   }
 }
 
-
 export interface Result<T> {
-  success(result: T): void;
+  success(result: T | null): void;
 
   error(error: Error): void;
 }
 
 export class FileSelectorApiCodec extends StandardMessageCodec {
   public static INSTANCE = new FileSelectorApiCodec();
+
+  private FileSelectorApiCodec() {}
 
   readValueOfType(type: number, buffer: ByteBuffer): ESObject {
     switch (type) {
@@ -187,6 +243,9 @@ export class FileSelectorApiCodec extends StandardMessageCodec {
         let vur: ESObject = super.readValue(buffer)
         let res1 = FileTypes.fromList(vur as Array<ESObject>);
         return res1;
+      case 130:
+        let resException = FileSelectorNativeException.fromList(super.readValue(buffer) as Array<ESObject>);
+        return resException;
       default:
         let res2: ESObject = super.readValueOfType(type, buffer);
         return res2;
@@ -200,6 +259,9 @@ export class FileSelectorApiCodec extends StandardMessageCodec {
     } else if (value instanceof FileTypes) {
       stream.writeInt8(129);
       return this.writeValue(stream, (value as FileTypes).toList());
+    } else if (value instanceof FileSelectorNativeException) {
+      stream.writeInt8(130);
+      return this.writeValue(stream, (value as FileSelectorNativeException).toList());
     } else {
       return super.writeValue(stream, value);
     }

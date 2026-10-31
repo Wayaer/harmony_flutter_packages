@@ -1,3 +1,3 @@
-import FileSelectorPlugin from './src/main/ets/FileSelectorPlugin'
+import FileSelectorPlugin from './src/main/ets/plugin/FileSelectorPlugin'
 
 export default FileSelectorPlugin
